@@ -15,6 +15,7 @@ import {
 import { IGenericResponse } from "../models/interfaces";
 
 const {
+  LIVE_API_BASE_URL,
   PICTORY_BASE_URL,
   PICTORY_CLIENT_ID,
   PICTORY_CLIENT_SECRET,
@@ -199,7 +200,7 @@ export const generateVideo = async (
         //     splitTextOnPeriod: true,
         //   },
         // ],
-        webhook: "http://localhost:5050/api/pictory/webhook",
+        webhook: `${LIVE_API_BASE_URL}/pictory/webhook`,
       }),
       method: "POST",
     });
