@@ -13,6 +13,10 @@ const userRoutes = Router();
 userRoutes
   .post("/expand/text", expandTextController)
   .post("/video/generate", [verifyAccessToken], generateVideoController)
-  .get("/video/monitor", [verifyAccessToken], monitorVideoStatusController);
+  .get(
+    "/video/monitor/:jobId",
+    [verifyAccessToken],
+    monitorVideoStatusController
+  );
 
 export default userRoutes;
