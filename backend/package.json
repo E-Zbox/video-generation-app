@@ -1,0 +1,40 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Passes user input to Pictory API to generate a video.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "dev": "nodemon --trace-warnings",
+    "start": "node ./dist/index.js",
+    "prod": "npm run build && npm run test",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ai-video",
+    "video-generation",
+    "generation-app"
+  ],
+  "author": "Ononogbu Ebenezer",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "@types/node-cron": "^3.0.11",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.10",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.10.0",
+    "node-cron": "^3.0.3",
+    "openai": "^4.84.0",
+    "socket.io": "^4.8.1"
+  }
+}
