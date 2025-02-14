@@ -67,6 +67,12 @@ export const generateVideoController = async (
       throw new RequestBodyError("Minimum length for `minimumDuration` is 10.");
     }
 
+    if (videoDescription.length > 100) {
+      throw new RequestBodyError(
+        "videoDescription length must be less than or equal to 100 characters long"
+      );
+    }
+
     const { accessToken } = req.pictory;
 
     const { data, error, success } = await generateVideo(
