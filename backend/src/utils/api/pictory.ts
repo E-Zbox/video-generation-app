@@ -92,12 +92,10 @@ export const generatePictoryToken =
       if (tokenExists.success) {
         const ONE_MINUTE = 60 * 1000;
 
-        if (
-          Date.now() <
-          tokenExists.data.updatedAt.getMilliseconds() +
-            tokenExists.data.expiresIn -
-            ONE_MINUTE
-        ) {
+        // check if has expired
+        const expiryTime =
+          Number(tokenExists.data.updatedAt) + tokenExists.data.expiresIn;
+        if (Date.now() > expiryTime - ONE_MINUTE) {
           const {
             data: { accessToken, expiresIn },
             error,
@@ -252,7 +250,9 @@ export const monitorVideoStatus = async (
       method: "GET",
     });
 
-    const { data, success } = await result.json();
+    const _result = await result.json();
+
+    const { data, success } = _result;
 
     if (!success) {
       if (data.error_message == "JOB_NOT_FOUND") {
