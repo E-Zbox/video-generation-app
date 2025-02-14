@@ -13,6 +13,8 @@ import jobListener from "./listeners/jobListener";
 
 const { MONGODB_URI } = process.env;
 
+const BODY_SIZE_LIMIT = 1024 * 1024 * 1024; // 1 GB
+
 class Service {
   public app: express.Application;
   public httpServer: HTTPServer<typeof IncomingMessage, typeof ServerResponse>;
@@ -61,8 +63,10 @@ class Service {
         optionsSuccessStatus: 200,
       })
     );
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(express.json({ limit: BODY_SIZE_LIMIT }));
+    this.app.use(
+      express.urlencoded({ extended: true, limit: BODY_SIZE_LIMIT })
+    );
   }
 
   initializeIO() {
