@@ -9,7 +9,7 @@ import {
 import { connect } from "mongoose";
 import { Server, Socket } from "socket.io";
 // listeners
-import jobListener from "./listeners.ts/jobListener";
+import jobListener from "./listeners/jobListener";
 
 const { MONGODB_URI } = process.env;
 

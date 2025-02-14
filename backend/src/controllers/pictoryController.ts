@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 // app
 import { io } from "@/app";
 // listeners
-import { emitEvents, roomCreators } from "@/listeners.ts";
+import { emitEvents, roomCreators } from "@/listeners";
 // utils/apis
 import { generatePictoryToken } from "@/utils/api/pictory";
 
