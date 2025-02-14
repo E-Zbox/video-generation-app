@@ -39,7 +39,12 @@ export const generateVideoController = async (
   next: NextFunction
 ): Promise<any> => {
   try {
-    const { _minimumDuration, text, videoDescription, videoName } = req.body;
+    const {
+      minimumDuration: _minimumDuration,
+      text,
+      videoDescription,
+      videoName,
+    } = req.body;
 
     const errorMessage = checkForObjectKeys(
       ["minimumDuration", "text", "videoDescription", "videoName"],
