@@ -116,6 +116,10 @@ export const generatePictoryToken =
           response = tokenExists;
         }
       } else {
+        if (tokenExists.error.includes("MongooseError")) {
+          throw tokenExists.error;
+        }
+
         const newAccessToken = await createAccessToken();
 
         if (!newAccessToken.success) {
@@ -146,9 +150,9 @@ export const generateVideo = async (
   accessToken: string,
   { videoName, videoDescription }: IBaseVideoPayload,
   scenes: IScene[],
+  brandLogoURL: string,
   speaker = "Ivy (child)",
-  speed = "100",
-  brandLogoURL = ""
+  speed = "100"
 ): Promise<IStoryboardResponse> => {
   let response: IStoryboardResponse = {
     data: {

@@ -40,6 +40,7 @@ export const generateVideoController = async (
 ): Promise<any> => {
   try {
     const {
+      brandLogoURL,
       minimumDuration: _minimumDuration,
       text,
       videoDescription,
@@ -47,13 +48,22 @@ export const generateVideoController = async (
     } = req.body;
 
     const errorMessage = checkForObjectKeys(
-      ["minimumDuration", "text", "videoDescription", "videoName"],
+      [
+        "brandLogoURL",
+        "minimumDuration",
+        "text",
+        "videoDescription",
+        "videoName",
+      ],
       req.body
     );
 
     if (errorMessage) {
       throw new RequestBodyError(errorMessage);
     }
+
+    // check if url is valid
+    new URL(brandLogoURL);
 
     const minimumDuration = Number(_minimumDuration);
 
@@ -89,7 +99,8 @@ export const generateVideoController = async (
           text,
           voiceOver: true,
         },
-      ]
+      ],
+      brandLogoURL
     );
 
     if (!success) {
@@ -99,7 +110,10 @@ export const generateVideoController = async (
     const { jobId } = data;
 
     return res.status(201).json({ data: jobId, error: "", success: true });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message == "Invalid URL") {
+      next(new Error("Invalid url passed to brandLogoURL"));
+    }
     next(error);
   }
 };
