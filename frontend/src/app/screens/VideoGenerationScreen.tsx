@@ -40,6 +40,7 @@ import { CustomImage } from "../styles/shared/Image.styles";
 // utils
 import { screens, theme } from "../utils/data";
 import { timeFormatter } from "../utils/transformer";
+import testVideo from "../store/test-video";
 
 interface IAIGeneratedText {
   loading: boolean;
@@ -206,11 +207,7 @@ const VideoGenerationScreen = () => {
     setAIGeneratedTextState((prevState) => {
       const storedValues = [...prevState.value];
 
-      console.log({ storedValues });
-
       storedValues.push(data);
-
-      console.log({ updatedStoredValues: storedValues });
 
       return { loading: false, value: storedValues };
     });
@@ -280,8 +277,6 @@ const VideoGenerationScreen = () => {
       videoDescription,
       videoName,
     });
-
-    console.log({ data, error, success });
 
     if (!success) {
       updateErrorState({ message: error, success });
@@ -367,8 +362,6 @@ const VideoGenerationScreen = () => {
           return;
         }
 
-        console.log({ data });
-
         // your video is processing
         updateErrorState({
           message: "Your video is processing!",
@@ -387,9 +380,6 @@ const VideoGenerationScreen = () => {
           }
 
           // update a particular state that will trigger render video element
-          console.log(video_generation_success);
-          console.log(data);
-
           setVideoState({
             loading: false,
             value: {
@@ -415,59 +405,80 @@ const VideoGenerationScreen = () => {
       //   }
       // });
 
-      videoElement.addEventListener("ended", (e) => {
-        console.log("ended");
-
-        if (videoPlayIdState < videoState.value.videos.length - 1) {
+      const handleEndedEvent = (e: Event) => {
+        if (
+          videoPlayIdState <= videoState.value.videos.length - 1 &&
+          Math.floor(videoCurrentTimeState) <= Math.floor(videoDurationState)
+        ) {
+          setVideoWatchedTimeState(
+            (prevState) => prevState + videoElement.duration
+          );
           setVideoPlayIdState((prevState) => prevState + 1);
         }
-      });
+      };
 
-      videoElement.addEventListener("fullscreenchange", () => {
+      videoElement.addEventListener("ended", handleEndedEvent);
+
+      const handleFullscreenChangeEvent = (e: Event) => {
         if (!document.fullscreenElement) {
           setVideoFullscreenState(false);
-          console.log({
-            bodyScrollHeight: document.body.scrollHeight,
-            bodyScrollTop: document.body.scrollTop,
-          });
+
           videoRef.current?.scrollIntoView();
         } else {
           setVideoFullscreenState(true);
         }
-      });
+      };
 
-      videoElement.addEventListener("loadstart", (e) => {
-        console.log("video is loading");
-        audioElement.pause();
-      });
+      videoElement.addEventListener(
+        "fullscreenchange",
+        handleFullscreenChangeEvent
+      );
 
-      videoElement.addEventListener("pause", (e) => {
-        console.log("paused video");
+      const handleLoadstartEvent = (e: Event) => {
+        if (videoElement.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) {
+          // console.log("video is loading");
+          // audioElement.pause();
+        }
+      };
+
+      videoElement.addEventListener("loadstart", handleLoadstartEvent);
+
+      const handleLoadeddataEvent = async (e: Event) => {
+        if (videoElement.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA) {
+          // console.log("video is done loading!");
+
+          if (videoIsPlayingState) {
+            await audioElement.play();
+            await videoElement.play();
+          }
+        }
+      };
+
+      videoElement.addEventListener("loadeddata", handleLoadeddataEvent);
+
+      const handlePauseEvent = (e: Event) => {
         audioElement.pause();
         setVideoIsPlayingState(false);
-      });
+      };
 
-      videoElement.addEventListener("play", async (e) => {
-        console.log("video started playing");
-        await audioElement.play();
+      videoElement.addEventListener("pause", handlePauseEvent);
+
+      const handlePlayEvent = async (e: Event) => {
+        audioElement.play();
         setVideoIsPlayingState(true);
-      });
+      };
 
-      videoElement.addEventListener("timeupdate", () => {
+      videoElement.addEventListener("play", handlePlayEvent);
+
+      const handleTimeupdateEvent = () => {
         const currentTime = videoElement.currentTime;
 
-        const progressBarWidth =
-          videoDurationState > currentTime
-            ? (currentTime / videoDurationState) * 100
-            : 0;
+        setVideoCurrentTimeState(videoWatchedTimeState + currentTime);
+      };
 
-        if (progressBarRef.current) {
-          progressBarRef.current.style.width = `${progressBarWidth}%`;
-          setVideoCurrentTimeState(videoWatchedTimeState + currentTime);
-        }
-      });
+      videoElement.addEventListener("timeupdate", handleTimeupdateEvent);
 
-      videoElement.addEventListener("volumechange", () => {
+      const handleVolumechangeEVent = () => {
         if (videoElement.muted) {
           setAudioMutedState(videoElement.muted);
         } else {
@@ -478,9 +489,32 @@ const VideoGenerationScreen = () => {
 
           setAudioMutedState(false);
         }
-      });
+      };
+      videoElement.addEventListener("volumechange", handleVolumechangeEVent);
+
+      return () => {
+        videoElement.removeEventListener("ended", handleEndedEvent);
+        videoElement.removeEventListener(
+          "fullscreenchange",
+          handleFullscreenChangeEvent
+        );
+        videoElement.removeEventListener("loadstart", handleLoadstartEvent);
+        videoElement.removeEventListener("pause", handlePauseEvent);
+        videoElement.removeEventListener("play", handlePlayEvent);
+        videoElement.removeEventListener("timeupdate", handleTimeupdateEvent);
+        videoElement.removeEventListener(
+          "volumechange",
+          handleVolumechangeEVent
+        );
+      };
     }
-  }, [audioRef, videoDurationState, videoRef]);
+  }, [
+    audioRef,
+    videoCurrentTimeState,
+    videoDurationState,
+    videoRef,
+    videoWatchedTimeState,
+  ]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -489,6 +523,7 @@ const VideoGenerationScreen = () => {
       // we don't want to start playing the video when the screen just loads
       if (videoPlayIdState) {
         videoRef.current?.play().then(() => {});
+        audioRef.current?.play();
       }
 
       // let's preload some video resource in background
@@ -505,15 +540,6 @@ const VideoGenerationScreen = () => {
           break;
         }
       }
-
-      // let's update watched time state
-      let newWatchedTime = 0;
-
-      for (let index = 0; index < videoPlayIdState + 1; index++) {
-        newWatchedTime += videoState.value.videos[index].time;
-      }
-
-      setVideoWatchedTimeState(newWatchedTime);
     }
   }, [videoPlayIdState]);
 
@@ -540,6 +566,9 @@ const VideoGenerationScreen = () => {
 
   useEffect(() => {
     if (videoState.value.videos.length > 0) {
+      // console.log({ videoPlayIdState });
+      // console.log(videoState.value.videos[videoPlayIdState].src);
+      // console.log(videoState.value.videos);
       let totalDuration = 0;
 
       videoState.value.videos.forEach(({ time }) => {
@@ -549,6 +578,15 @@ const VideoGenerationScreen = () => {
       setVideoDurationState(totalDuration);
     }
   }, [videoState]);
+
+  useEffect(() => {
+    const progressBardWidth =
+      (videoCurrentTimeState / videoDurationState) * 100;
+
+    if (progressBarRef.current) {
+      progressBarRef.current.style.width = `${progressBardWidth}%`;
+    }
+  }, [videoCurrentTimeState]);
 
   return (
     <MainVideoGeneration $marginTop={navbarHeightState}>
