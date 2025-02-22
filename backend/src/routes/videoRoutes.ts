@@ -1,9 +1,9 @@
 import { Router } from "express";
 // controllers
 import {
-  deleteVideoBackgroundController,
-  videoBackgroundUploadController,
-} from "@/controllers/videoController";
+  deleteMediaController,
+  uploadMediaController,
+} from "@/controllers/mediaController";
 // middlewares
 import { uploadVideoBackgroundMedia } from "@/middlewares/uploadFiles";
 
@@ -13,8 +13,8 @@ videoRoutes
   .post(
     "/upload",
     uploadVideoBackgroundMedia.single("media"),
-    videoBackgroundUploadController
+    uploadMediaController
   )
-  .delete("/delete/:mediaId", deleteVideoBackgroundController);
+  .delete("/delete/:mediaId", deleteMediaController);
 
 export default videoRoutes;
