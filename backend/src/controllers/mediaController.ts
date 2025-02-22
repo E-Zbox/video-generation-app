@@ -9,7 +9,7 @@ import { createMedia, deleteMedia } from "@/utils/models/media";
 
 const { ObjectId } = Types;
 
-export const videoBackgroundUploadController = async (
+export const uploadMediaController = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -44,7 +44,7 @@ export const videoBackgroundUploadController = async (
   }
 };
 
-export const deleteVideoBackgroundController = async (
+export const deleteMediaController = async (
   req: Request,
   res: Response,
   next: NextFunction
