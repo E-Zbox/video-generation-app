@@ -317,7 +317,9 @@ export const generateDownloadableVideoController = async (
       throw error;
     }
 
-    return res.status(200).json({ data, error, success });
+    const { jobId } = data;
+
+    return res.status(200).json({ data: jobId, error, success });
   } catch (error) {
     next(error);
   }
