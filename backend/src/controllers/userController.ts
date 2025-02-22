@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { Types } from "mongoose";
 // api
 import { expandText } from "@/utils/api/openai";
 import { generateVideo, monitorVideoStatus } from "@/utils/api/pictory";
@@ -40,6 +41,8 @@ export const generateVideoController = async (
 ): Promise<any> => {
   try {
     const {
+      brandLogoHorizontalAlignment,
+      brandLogoVerticalAlignment,
       brandLogoURL,
       minimumDuration: _minimumDuration,
       text,
@@ -49,6 +52,8 @@ export const generateVideoController = async (
 
     const errorMessage = checkForObjectKeys(
       [
+        "brandLogoHorizontalAlignment",
+        "brandLogoVerticalAlignment",
         "brandLogoURL",
         "minimumDuration",
         "text",
@@ -100,7 +105,11 @@ export const generateVideoController = async (
           voiceOver: true,
         },
       ],
-      brandLogoURL
+      {
+        horizontalAlignment: brandLogoHorizontalAlignment,
+        url: brandLogoURL,
+        verticalAlignment: brandLogoVerticalAlignment,
+      }
     );
 
     if (!success) {

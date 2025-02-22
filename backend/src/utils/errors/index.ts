@@ -1,3 +1,12 @@
+export class FileUploadError extends Error {
+  public status: number;
+  constructor(message: string) {
+    super(message);
+    this.name = "FileUploadError";
+    this.status = 401;
+  }
+}
+
 export class HistoryError extends Error {
   public status: number;
   constructor(message: string) {
