@@ -17,7 +17,7 @@ export const videoBackgroundUploadController = async (
   try {
     if (!req.file) {
       throw new RequestBodyError(
-        "Missing `videoBackground` field with video background file!"
+        "Missing `media` field with video background file!"
       );
     }
 

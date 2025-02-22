@@ -12,7 +12,7 @@ const videoRoutes = Router();
 videoRoutes
   .post(
     "/upload",
-    uploadVideoBackgroundMedia.single("videoBackground"),
+    uploadVideoBackgroundMedia.single("media"),
     videoBackgroundUploadController
   )
   .delete("/delete/:mediaId", deleteVideoBackgroundController);
