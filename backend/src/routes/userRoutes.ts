@@ -2,6 +2,7 @@ import { Router } from "express";
 // controllers
 import {
   expandTextController,
+  generateDownloadableVideoController,
   generateVideoController,
   monitorVideoStatusController,
 } from "@/controllers/userController";
@@ -17,6 +18,11 @@ userRoutes
     "/video/monitor/:jobId",
     [verifyAccessToken],
     monitorVideoStatusController
+  )
+  .post(
+    "/video/download",
+    [verifyAccessToken],
+    generateDownloadableVideoController
   );
 
 export default userRoutes;

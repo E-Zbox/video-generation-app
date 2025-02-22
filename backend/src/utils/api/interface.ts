@@ -8,7 +8,7 @@ export interface IPictoryAccessToken {
 export interface IPictoryAccessTokenResponse
   extends IGenericResponse<IPictoryAccessToken> {}
 
-export interface IScene {
+export interface IGenerateVideoScene {
   backgroundURI?: string;
   minimumDuration: number;
   splitTextOnNewLine: boolean;
@@ -28,6 +28,68 @@ export interface IBrandLogoPayload {
   horizontalAlignment: "center" | "left" | "right";
 }
 
+export interface IAudioSettings {
+  video_volume: number;
+  audio_id: number;
+  audio_library: string;
+  src: string;
+  track_volume: number;
+  tts: string;
+}
+
+export interface IOutputSettings {
+  name: string;
+  description: string;
+  format: string;
+  title: string;
+  height: number;
+  width: number;
+}
+
+export interface IBackgroundSrc {
+  url: string;
+  type: string;
+  library: string;
+  loop_video: true;
+  mute: true;
+}
+
+export interface IAnimation {
+  animation: string;
+  source: string;
+  speed: number;
+  type: string;
+}
+
+export interface ITextLine {
+  text: string;
+  text_animation: IAnimation[];
+  text_bg_animation: IAnimation;
+}
+
+export interface ISubScene {
+  time: number;
+  location: {
+    start_x: number;
+    start_y: number;
+  };
+  text_lines: ITextLine[];
+  // font: {}
+}
+
+export interface IScene {
+  background: {
+    src: IBackgroundSrc;
+    color: string;
+    bg_animation: {
+      animation: string;
+    };
+    time: number;
+  };
+  time: number;
+  sub_scenes: ISubScene[];
+}
+
 export interface IStoryboardResponse
   extends IGenericResponse<{
     data: {
@@ -35,4 +97,9 @@ export interface IStoryboardResponse
     };
     jobId: string;
     success: boolean;
+  }> {}
+
+export interface IRenderVideoResponse
+  extends IGenericResponse<{
+    jobId: string;
   }> {}

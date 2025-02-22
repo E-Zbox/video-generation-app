@@ -38,15 +38,29 @@ export const pictoryWebhookController = async (
       return res.status(200).json({ success: true });
     }
 
-    const { video_generation_success } = emitEvents;
+    const { video_generation_success, video_render_success } = emitEvents;
 
-    const { create_job_id_room } = roomCreators;
+    const { create_video_generation_room, create_video_render_room } =
+      roomCreators;
 
-    io.to(create_job_id_room(job_id)).emit(video_generation_success, {
-      data,
-      error: "",
-      success: true,
-    });
+    if (data.renderParams) {
+      io.to(create_video_generation_room(job_id)).emit(
+        video_generation_success,
+        {
+          data,
+          error: "",
+          success: true,
+        }
+      );
+    }
+
+    if (data.status == "completed") {
+      io.to(create_video_render_room(job_id)).emit(video_render_success, {
+        data,
+        error: "",
+        success: true,
+      });
+    }
 
     return res.status(200).json({ success: true });
   } catch (error) {

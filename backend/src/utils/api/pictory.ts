@@ -1,8 +1,12 @@
 // interfaces
 import {
+  IAudioSettings,
   IBaseVideoPayload,
   IBrandLogoPayload,
+  IGenerateVideoScene,
+  IOutputSettings,
   IPictoryAccessTokenResponse,
+  IRenderVideoResponse,
   IScene,
   IStoryboardResponse,
 } from "./interface";
@@ -147,8 +151,8 @@ export const generatePictoryToken =
 
 export const generateVideo = async (
   accessToken: string,
-  { videoName, videoDescription }: IBaseVideoPayload,
-  scenes: IScene[],
+  { videoDescription, videoName }: IBaseVideoPayload,
+  scenes: IGenerateVideoScene[],
   brandLogo: IBrandLogoPayload,
   speaker = "Ivy (child)",
   speed = "100"
@@ -275,3 +279,55 @@ export const monitorVideoStatus = async (
 };
 
 export const getVoiceOverTracks = async () => {};
+
+export const generateDownloadableVideo = async (
+  accessToken: string,
+  audioSettings: IAudioSettings,
+  outputSettings: IOutputSettings,
+  scenes: IScene[]
+): Promise<IRenderVideoResponse> => {
+  let response: IRenderVideoResponse = {
+    data: {
+      jobId: "",
+    },
+    error: "",
+    success: false,
+  };
+
+  try {
+    const result = await fetch(`${PICTORY_BASE_URL}/video/render`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: accessToken,
+        "Content-Type": "application/json",
+        "X-Pictory-User-Id": PICTORY_USER_ID!,
+      },
+      method: "POST",
+      body: JSON.stringify({
+        audio: audioSettings,
+        output: outputSettings,
+        scenes: scenes,
+        webhook: `${LIVE_API_BASE_URL}/pictory/webhook`,
+      }),
+    });
+
+    const _result = await result.json();
+
+    const { data, success } = _result;
+
+    response = {
+      data: {
+        jobId: data.job_id,
+      },
+      error: "",
+      success: true,
+    };
+  } catch (error) {
+    response = {
+      ...response,
+      error: `${error}`,
+    };
+  } finally {
+    return response;
+  }
+};
