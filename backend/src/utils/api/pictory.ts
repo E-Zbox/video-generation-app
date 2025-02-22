@@ -1,6 +1,7 @@
 // interfaces
 import {
   IBaseVideoPayload,
+  IBrandLogoPayload,
   IPictoryAccessTokenResponse,
   IScene,
   IStoryboardResponse,
@@ -148,7 +149,7 @@ export const generateVideo = async (
   accessToken: string,
   { videoName, videoDescription }: IBaseVideoPayload,
   scenes: IScene[],
-  brandLogoURL: string,
+  brandLogo: IBrandLogoPayload,
   speaker = "Ivy (child)",
   speed = "100"
 ): Promise<IStoryboardResponse> => {
@@ -182,11 +183,7 @@ export const generateVideo = async (
           autoBackgroundMusic: true,
           backGroundMusicVolume: 0.5,
         },
-        brandLogo: {
-          url: brandLogoURL,
-          verticalAlignment: "top",
-          horizontalAlignment: "right",
-        },
+        brandLogo: brandLogo,
         videoName: videoName,
         videoDescription: videoDescription,
         language: "en",
@@ -276,3 +273,5 @@ export const monitorVideoStatus = async (
     return response;
   }
 };
+
+export const getVoiceOverTracks = async () => {};

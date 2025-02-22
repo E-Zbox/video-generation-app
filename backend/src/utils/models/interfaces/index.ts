@@ -10,6 +10,8 @@ export interface IIDPayload {
   _id: Types.ObjectId;
 }
 
+export interface INumberResponse extends IGenericResponse<number> {}
+
 export interface IRecord {
   [name: string]: any;
 }

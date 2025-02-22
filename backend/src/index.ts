@@ -8,6 +8,7 @@ import { globalErrorController, invalidRoutesController } from "./controllers";
 import { baseAPIURL, indexRoutes } from "./routes";
 import pictoryRoutes from "./routes/pictoryRoutes";
 import userRoutes from "./routes/userRoutes";
+import videoRoutes from "./routes/videoRoutes";
 
 // app
 import { app, server } from "./app";
@@ -20,6 +21,7 @@ const { PORT } = process.env;
 app.use("/", indexRoutes);
 app.use(`${baseAPIURL}/pictory`, pictoryRoutes);
 app.use(`${baseAPIURL}/user`, userRoutes);
+app.use(`${baseAPIURL}/video/background`, videoRoutes);
 
 app.use("*", invalidRoutesController);
 
