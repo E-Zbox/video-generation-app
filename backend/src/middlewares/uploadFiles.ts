@@ -41,6 +41,7 @@ export const uploadVideoBackgroundMedia = multer({
       return {
         folder: `${rootDir}/video/background`,
         public_id: `${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+        resource_type: "auto",
       };
     },
   }),

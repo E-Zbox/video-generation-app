@@ -8,16 +8,10 @@ import { MediaError } from "../errors";
 import Media from "@/models/Media";
 
 export const createMedia = async (
-  payload: ICreateMediaPayload
+  payload: ICreateMediaPayload[]
 ): Promise<IMediaResponse> => {
   let response: IMediaResponse = {
-    data: {
-      mimetype: "",
-      path: "",
-      publicId: "",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
+    data: [],
     error: "",
     success: false,
   };
@@ -28,10 +22,19 @@ export const createMedia = async (
       throw new MediaError("Media creation failed!");
     }
 
-    const { _id, mimetype, path, publicId, createdAt, updatedAt } = result;
+    const data = result.map(
+      ({ _id, mimetype, path, publicId, createdAt, updatedAt }) => ({
+        _id,
+        mimetype,
+        path,
+        publicId,
+        createdAt,
+        updatedAt,
+      })
+    );
 
     response = {
-      data: { _id, mimetype, path, publicId, createdAt, updatedAt },
+      data,
       error: "",
       success: true,
     };

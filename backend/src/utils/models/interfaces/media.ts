@@ -8,4 +8,4 @@ export interface ICreateMediaPayload {
   publicId: string;
 }
 
-export interface IMediaResponse extends IGenericResponse<IMedia> {}
+export interface IMediaResponse extends IGenericResponse<IMedia[]> {}

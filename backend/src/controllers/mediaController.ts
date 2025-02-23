@@ -15,19 +15,25 @@ export const uploadMediaController = async (
   next: NextFunction
 ): Promise<any> => {
   try {
-    if (!req.file) {
+    if (!req.files) {
       throw new RequestBodyError(
         "Missing `media` field with video background file!"
       );
     }
 
-    const { filename: publicId, mimetype, path } = req.file;
+    if (!Array.isArray(req.files)) {
+      throw new RequestBodyError("Expected an array of files");
+    }
 
-    const { data, error, success } = await createMedia({
-      mimetype,
-      path,
-      publicId,
-    });
+    const createMediaPayload = req.files.map(
+      ({ filename: publicId, mimetype, path }) => ({
+        mimetype,
+        path,
+        publicId,
+      })
+    );
+
+    const { data, error, success } = await createMedia(createMediaPayload);
 
     if (!success) {
       throw error;
@@ -35,10 +41,10 @@ export const uploadMediaController = async (
 
     return res.status(201).json({ data, error, success });
   } catch (error) {
-    if (req.file) {
-      const { filename } = req.file;
-
-      await cloudinary.api.delete_resources([filename]);
+    if (req.files && Array.isArray(req.files)) {
+      req.files.map(async ({ filename }) => {
+        await cloudinary.api.delete_resources([filename]);
+      });
     }
     next(error);
   }
