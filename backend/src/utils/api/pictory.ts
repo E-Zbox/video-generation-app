@@ -9,6 +9,7 @@ import {
   IRenderVideoResponse,
   IScene,
   IStoryboardResponse,
+  IVoiceOverTrackResponse,
 } from "./interface";
 import { IPictoryTokenResponse } from "../models/interfaces/pictoryToken";
 // ../models
@@ -278,7 +279,46 @@ export const monitorVideoStatus = async (
   }
 };
 
-export const getVoiceOverTracks = async () => {};
+export const getVoiceOverTracks = async (accessToken: string) => {
+  let response: IVoiceOverTrackResponse = {
+    data: {
+      gender: "",
+      id: 0,
+      language: "",
+      name: "",
+      sample: "",
+    },
+    error: "",
+    success: false,
+  };
+
+  try {
+    const result = await await fetch(`${PICTORY_BASE_URL}/voiceovers/tracks`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: accessToken,
+        "Content-Type": "application/json",
+        "X-Pictory-User-Id": PICTORY_USER_ID!,
+      },
+      method: "GET",
+    });
+
+    const data = await result.json();
+
+    response = {
+      data,
+      error: "",
+      success: true,
+    };
+  } catch (error) {
+    response = {
+      ...response,
+      error: `${error}`,
+    };
+  } finally {
+    return response;
+  }
+};
 
 export const generateDownloadableVideo = async (
   accessToken: string,

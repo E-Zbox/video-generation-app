@@ -5,6 +5,7 @@ import { expandText } from "@/utils/api/openai";
 import {
   generateDownloadableVideo,
   generateVideo,
+  getVoiceOverTracks,
   monitorVideoStatus,
 } from "@/utils/api/pictory";
 // config
@@ -55,6 +56,8 @@ export const generateVideoController = async (
       videoName,
     } = req.body;
 
+    let { speaker } = req.body;
+
     const errorMessage = checkForObjectKeys(
       [
         "brandLogoHorizontalAlignment",
@@ -94,6 +97,10 @@ export const generateVideoController = async (
     }
 
     const { accessToken } = req.pictory;
+
+    if (!speaker) {
+      speaker = "Ivy (child)";
+    }
 
     const { data, error, success } = await generateVideo(
       accessToken,
@@ -320,6 +327,26 @@ export const generateDownloadableVideoController = async (
     const { jobId } = data;
 
     return res.status(200).json({ data: jobId, error, success });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getVoiceOverTracksController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { accessToken } = req.pictory;
+
+    const { data, error, success } = await getVoiceOverTracks(accessToken);
+
+    if (!success) {
+      throw error;
+    }
+
+    return res.status(200).json({ data, error, success });
   } catch (error) {
     next(error);
   }

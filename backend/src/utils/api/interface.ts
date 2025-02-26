@@ -90,6 +90,20 @@ export interface IScene {
   sub_scenes: ISubScene[];
 }
 
+export interface IVoiceOverTrack {
+  // accent: string;
+  // category: string;
+  // engine: string;
+  gender: string;
+  id: number;
+  language: string;
+  name: string;
+  sample: string;
+  // service: string;
+  // ssmlHelp: string;
+  // ssmlSupportCategory: string;
+}
+
 export interface IStoryboardResponse
   extends IGenericResponse<{
     data: {
@@ -103,3 +117,6 @@ export interface IRenderVideoResponse
   extends IGenericResponse<{
     jobId: string;
   }> {}
+
+export interface IVoiceOverTrackResponse
+  extends IGenericResponse<IVoiceOverTrack> {}
