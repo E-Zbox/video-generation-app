@@ -5,6 +5,23 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
+  async headers() {
+    return [
+      {
+        source: "/editor",
+        headers: [
+          {
+            key: "Cross-Origin-Embedder-Policy",
+            value: "require-corp",
+          },
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
+          },
+        ],
+      },
+    ];
+  },
   reactStrictMode: true,
 };
 
