@@ -5,3 +5,5 @@ node_modules/
 .env*
 
 task-one*
+
+*/*/*/*/Test*
