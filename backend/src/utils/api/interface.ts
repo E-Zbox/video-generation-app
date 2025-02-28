@@ -119,4 +119,4 @@ export interface IRenderVideoResponse
   }> {}
 
 export interface IVoiceOverTrackResponse
-  extends IGenericResponse<IVoiceOverTrack> {}
+  extends IGenericResponse<IVoiceOverTrack[]> {}

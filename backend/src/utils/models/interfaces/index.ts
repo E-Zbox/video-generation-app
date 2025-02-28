@@ -12,6 +12,10 @@ export interface IIDPayload {
 
 export interface INumberResponse extends IGenericResponse<number> {}
 
+export interface IStringResponse extends IGenericResponse<string> {}
+
+export interface IStringsResponse extends IGenericResponse<string[]> {}
+
 export interface IRecord {
   [name: string]: any;
 }

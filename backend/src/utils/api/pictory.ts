@@ -281,13 +281,7 @@ export const monitorVideoStatus = async (
 
 export const getVoiceOverTracks = async (accessToken: string) => {
   let response: IVoiceOverTrackResponse = {
-    data: {
-      gender: "",
-      id: 0,
-      language: "",
-      name: "",
-      sample: "",
-    },
+    data: [],
     error: "",
     success: false,
   };

@@ -6,6 +6,8 @@ import cloudinary from "@/config/cloudinary";
 import { RequestBodyError } from "@/utils/errors";
 // utils
 import { createMedia, deleteMedia } from "@/utils/models/media";
+import { checkForObjectKeys } from "@/utils/config/check";
+import { trimVideo } from "@/utils/service/video";
 
 const { ObjectId } = Types;
 
@@ -72,6 +74,53 @@ export const deleteMediaController = async (
     ) {
       error = new Error("Invalid `mediaId` parameter passed");
     }
+    next(error);
+  }
+};
+
+export const trimVideoController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { startTime, offset, videoUrl } = req.body;
+
+    const errorMessage = checkForObjectKeys(
+      ["startTime", "offset", "videoUrl"],
+      req.body
+    );
+
+    if (errorMessage) {
+      throw new RequestBodyError(errorMessage);
+    }
+
+    const offsetInSeconds = Number(offset);
+
+    if (isNaN(offsetInSeconds)) {
+      throw new RequestBodyError("Expected `offset` field as seconds");
+    }
+
+    const startTimeInSeconds = Number(startTime);
+
+    if (isNaN(startTimeInSeconds)) {
+      throw new RequestBodyError("Expected `startTime` field as seconds");
+    }
+
+    const { data, error, success } = await trimVideo(
+      videoUrl,
+      startTimeInSeconds,
+      offsetInSeconds
+    );
+
+    if (!success) {
+      throw error;
+    }
+
+    return res
+      .status(200)
+      .json({ data: `data:video/mp4;base64,${data}`, error, success });
+  } catch (error) {
     next(error);
   }
 };
