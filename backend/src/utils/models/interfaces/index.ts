@@ -16,6 +16,13 @@ export interface IStringResponse extends IGenericResponse<string> {}
 
 export interface IStringsResponse extends IGenericResponse<string[]> {}
 
+export interface IThumbnail {
+  src: string;
+  startTime: number;
+}
+
+export interface IThumbnailsResponse extends IGenericResponse<IThumbnail[]> {}
+
 export interface IRecord {
   [name: string]: any;
 }

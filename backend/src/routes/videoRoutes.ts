@@ -2,6 +2,7 @@ import { Router } from "express";
 // controllers
 import {
   deleteMediaController,
+  generateThumbnailsController,
   trimVideoController,
   uploadMediaController,
 } from "@/controllers/mediaController";
@@ -11,6 +12,7 @@ import { uploadVideoBackgroundMedia } from "@/middlewares/uploadFiles";
 const videoRoutes = Router();
 
 videoRoutes
+  .post("/generate-thumbnails", generateThumbnailsController)
   .post("/trim", trimVideoController)
   .post(
     "/upload",

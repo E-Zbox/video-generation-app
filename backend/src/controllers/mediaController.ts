@@ -7,7 +7,7 @@ import { RequestBodyError } from "@/utils/errors";
 // utils
 import { createMedia, deleteMedia } from "@/utils/models/media";
 import { checkForObjectKeys } from "@/utils/config/check";
-import { trimVideo } from "@/utils/service/video";
+import { generateThumbnails, trimVideo } from "@/utils/service/video";
 
 const { ObjectId } = Types;
 
@@ -74,6 +74,55 @@ export const deleteMediaController = async (
     ) {
       error = new Error("Invalid `mediaId` parameter passed");
     }
+    next(error);
+  }
+};
+
+export const generateThumbnailsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const {
+      duration: _duration,
+      maxThumbnails: _maxThumbnails,
+      videoUrl,
+    } = req.body;
+
+    const errorMessage = checkForObjectKeys(
+      ["duration", "maxThumbnails", "videoUrl"],
+      req.body
+    );
+
+    if (errorMessage) {
+      throw new RequestBodyError(errorMessage);
+    }
+
+    const duration = Number(_duration);
+
+    if (isNaN(duration)) {
+      throw new RequestBodyError("Expected `duration` field as seconds");
+    }
+
+    const maxThumbnails = Number(_maxThumbnails);
+
+    if (isNaN(maxThumbnails)) {
+      throw new RequestBodyError("Expected `maxThumbnails` field as seconds");
+    }
+
+    const { data, error, success } = await generateThumbnails(
+      videoUrl,
+      duration,
+      maxThumbnails
+    );
+
+    if (!success) {
+      throw error;
+    }
+
+    return res.status(200).json({ data, error, success });
+  } catch (error) {
     next(error);
   }
 };
