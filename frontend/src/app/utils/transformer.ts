@@ -22,3 +22,27 @@ export const timeFormatter = (timeInSeconds: number): string => {
 
   return result;
 };
+
+export const readFileAsBase64 = async (file: Blob): Promise<any> => {
+  return new Promise((resolver, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      resolver(reader.result);
+    };
+
+    reader.onerror = reject;
+
+    reader.readAsDataURL(file);
+  });
+};
+
+export const download = (url: string) => {
+  const link = document.createElement("a");
+
+  link.href = url;
+
+  link.setAttribute("download", "");
+
+  link.click();
+};

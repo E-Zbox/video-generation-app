@@ -32,7 +32,7 @@ export const MainModal = styled.main<IMainModal>`
   ${({
     $animationDuration,
     $success,
-    theme: { blue02, blue04, green01, purple01, red01 },
+    theme: { blue02, blue05, green01, purple01, red01 },
   }) => css`
     --padding: calc(var(--ten-px) * 1.5);
     position: relative;
@@ -71,13 +71,13 @@ export const MainModal = styled.main<IMainModal>`
       z-index: -1;
       //   background-image: linear-gradient(
       //     to bottom right,
-      //     ${blue04}de,
-      //     ${blue04},
-      //     ${blue04},
-      //     ${blue04}c5,
+      //     ${blue05}de,
+      //     ${blue05},
+      //     ${blue05},
+      //     ${blue05}c5,
       //     ${purple01}11
       //   );
-      background-color: ${blue04}b5;
+      background-color: ${blue05}b5;
     }
   `}
 `;

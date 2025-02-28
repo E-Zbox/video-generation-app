@@ -15,6 +15,7 @@ import { CustomImage } from "../styles/shared/Image.styles";
 
 interface IProps {
   id: string;
+  timeout?: number;
 }
 
 const Modal = (props: IProps) => {
@@ -26,15 +27,16 @@ const Modal = (props: IProps) => {
     },
   } = screens;
 
-  const { deleteFromErrorState, errorState } = useAppStore();
+  const { deleteFromMessageState, messageState } = useAppStore();
 
-  const { message, success } = errorState[id];
+  const { message, success } = messageState[id];
+  let { timeoutInMilliseconds } = messageState[id];
 
-  const timeout = 10000;
+  const timeout = timeoutInMilliseconds || 10000;
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      deleteFromErrorState(id);
+      deleteFromMessageState(id);
     }, timeout);
 
     return () => {
@@ -46,7 +48,7 @@ const Modal = (props: IProps) => {
     <MainModal
       $animationDuration={timeout}
       $success={success}
-      onClick={() => deleteFromErrorState(id)}
+      onClick={() => deleteFromMessageState(id)}
     >
       <CustomImage
         src={success ? alertSuccess.src : alertCancel.src}

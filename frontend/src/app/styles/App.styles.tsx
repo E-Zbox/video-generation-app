@@ -8,11 +8,10 @@ export const MainApp = styled.main`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border-radius: 30px;
   overflow: hidden;
-  padding: calc(var(--ten-px) * 2);
-  background: ${({ theme: { black03, purple03 } }) =>
-    `radial-gradient(ellipse at bottom center, ${purple03}, ${black03})`};
+  // padding: calc(var(--ten-px) * 2);
+  background: ${({ theme: { purple02 } }) =>
+    `radial-gradient(ellipse at bottom center, #000, ${purple02}11)`};
 
   &::before {
     content: "";

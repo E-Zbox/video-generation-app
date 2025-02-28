@@ -14,6 +14,7 @@ export default createGlobalStyle`
         --three-px: 3px;
         --seven-px: 7px;
         --ten-px: 10px;
+        --mediaTrayVideoSize: 130px;
 
         box-sizing: border-box;
         font-family: Source Sans Pro;
@@ -31,6 +32,6 @@ export default createGlobalStyle`
         display: flex;
         flex-direction: column;
         min-height: 100vh;
-        background-color: ${({ theme: { blue04 } }) => blue04};
+        background-color: ${({ theme: { blue05 } }) => blue05};
     }
 `;

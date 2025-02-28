@@ -1,4 +1,5 @@
 "use client";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
 import React, { useEffect } from "react";
 // components
 import Modal from "../components/Modal";
@@ -15,9 +16,37 @@ export default function PrimaryLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { errorState } = useAppStore();
+  const { ffmpegState, setFFmpegState, messageState } = useAppStore();
 
-  const errorIds = Object.getOwnPropertyNames(errorState);
+  const errorIds = Object.getOwnPropertyNames(messageState);
+
+  useEffect(() => {
+    setFFmpegState(new FFmpeg());
+  }, []);
+
+  useEffect(() => {
+    if (ffmpegState) {
+      console.log("about to load ffmpegState");
+      console.log(new Date());
+      const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+
+      ffmpegState
+        .load({
+          coreURL: `${baseURL}/ffmpeg-core.js`,
+          wasmURL: `${baseURL}/ffmpeg-core.wasm`,
+          workerURL: `${baseURL}/ffmpeg-worker.js`,
+        })
+        .then((res) => {
+          console.log("load ffmpeg response");
+          console.log({ res });
+          console.log(new Date());
+        })
+        .catch((err) => {
+          console.log("FFmpegState load error");
+          console.log(err);
+        });
+    }
+  }, [ffmpegState]);
 
   return (
     <>

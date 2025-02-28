@@ -1,6 +1,12 @@
 import { instance } from ".";
 // interfaces
-import { IGenerateVideoPayload, IStringResponse } from "./interface";
+import {
+  IAudioSettingsPayload,
+  IGenerateVideoPayload,
+  IOutputSettingsPayload,
+  IScene,
+  IStringResponse,
+} from "../interfaces/video";
 
 export const serverIsAlive = async (): Promise<IStringResponse> => {
   let response: IStringResponse = {
@@ -63,6 +69,49 @@ export const generateVideo = async (
   try {
     const result = await instance.post("/user/video/generate", {
       ...payload,
+    });
+
+    const { data } = result;
+
+    response = {
+      ...data,
+    };
+  } catch (error) {
+    response = {
+      ...response,
+      error: `${error}`,
+    };
+  } finally {
+    return response;
+  }
+};
+
+export const getDownloadableVideo = async (payload: {
+  audioSettings: IAudioSettingsPayload;
+  outputSettings: IOutputSettingsPayload;
+  scenes: IScene[];
+}): Promise<IStringResponse> => {
+  let response: IStringResponse = {
+    data: "",
+    error: "",
+    success: false,
+  };
+
+  try {
+    const {
+      audioSettings: { audioId, audioSrc, tts },
+      outputSettings: { videoDescription, videoName, videoTitle },
+      scenes,
+    } = payload;
+
+    const result = await instance.post("/user/video/download", {
+      audioId,
+      audioSrc,
+      tts,
+      videoDescription,
+      videoName,
+      videoTitle,
+      scenes,
     });
 
     const { data } = result;

@@ -61,6 +61,7 @@ export const MainContainer = styled.main<IMainContainer>`
   justify-content: ${({ $justifyContent }) => $justifyContent || "flex-start"};
   align-items: ${({ $alignItems }) => $alignItems || "center"};
   padding: ${({ $padding }) => $padding || "0px"};
+  ${({ $miscellanous }) => $miscellanous};
 
   @media (max-width: ${({ theme: { devices } }) => devices.xs}) {
     height: ${({ $heightXS }) => $heightXS || "fit-content"};

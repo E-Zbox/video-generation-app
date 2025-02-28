@@ -1,19 +1,25 @@
 "use client";
+import { useRouter } from "next/navigation";
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 // api
 import {
   IStringResponse,
   IVideoGeneration,
   IVideoGenerationResponse,
-} from "@/api/interface";
-import { expandText, generateVideo } from "@/api/rest";
+} from "@/api/interfaces/video";
+import { expandText, generateVideo } from "@/api/rest/ai-generation";
 import { emitEvents, onEvents } from "@/api/socket";
 // components
 import AIGeneratedCard from "../components/AIGeneratedCard";
 import TextInput from "../components/TextInput";
 import VideoControl from "../components/VideoControl";
 // store
-import { useAppStore } from "../store";
+import {
+  useAppStore,
+  useEditorStore,
+  useStoryboardEditorStore,
+} from "../store";
+import testVideo from "../store/test-video";
 // styles
 import {
   Form,
@@ -40,7 +46,6 @@ import { CustomImage } from "../styles/shared/Image.styles";
 // utils
 import { screens, theme } from "../utils/data";
 import { timeFormatter } from "../utils/transformer";
-import testVideo from "../store/test-video";
 
 interface IAIGeneratedText {
   loading: boolean;
@@ -72,8 +77,6 @@ const VideoGenerationScreen = () => {
           pause,
           play,
           volumeHigh,
-          volumeLow,
-          volumeMid,
           volumeMute,
         },
       },
@@ -81,13 +84,23 @@ const VideoGenerationScreen = () => {
     },
   } = screens;
 
-  const { updateErrorState, navbarHeightState, socketState } = useAppStore();
+  const {
+    editMessageInMessageState,
+    ffmpegState,
+    updateMessageState,
+    navbarHeightState,
+    socketState,
+  } = useAppStore();
+  const { setAiGeneratedScenes } = useEditorStore();
+  const { sceneState, setStoryboardState } = useStoryboardEditorStore();
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const expandTextScrollerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const router = useRouter();
 
   const [aiGeneratedTextState, setAIGeneratedTextState] =
     useState<IAIGeneratedText>({
@@ -103,6 +116,8 @@ const VideoGenerationScreen = () => {
     input_video_name: "",
   });
   const [hideTextLabelState, setHideTextLabelState] = useState(false);
+  const [redirectMessageIdState, setRedirectMessageIdState] = useState("");
+  const [redirectTimerState, setRedirectTimerState] = useState(5);
   const [selectedTabMenuState, setSelectedTabMenuState] = useState(0);
   const [tabMenuState, setTabMenuState] = useState([
     {
@@ -116,6 +131,7 @@ const VideoGenerationScreen = () => {
       text: "AI Generated Story",
     },
   ]);
+  const [triggerTimerState, setTriggerTimerState] = useState(false);
   const [videoCurrentTimeState, setVideoCurrentTimeState] = useState(0);
   const [videoDurationState, setVideoDurationState] = useState(0);
   const [videoFullscreenState, setVideoFullscreenState] = useState(false);
@@ -133,9 +149,10 @@ const VideoGenerationScreen = () => {
 
   const { purple01, purple02 } = theme;
 
-  const { join_room } = emitEvents;
+  const { join_video_generation_room } = emitEvents;
 
-  const { join_room_success, video_generation_success } = onEvents;
+  const { join_video_generation_room_success, video_generation_success } =
+    onEvents;
 
   let disableGenerateButton = false;
 
@@ -185,7 +202,7 @@ const VideoGenerationScreen = () => {
     const { input_text: text } = formState;
 
     if (text.length == 0) {
-      updateErrorState({
+      updateMessageState({
         message: "Write a story to continue!",
         success: false,
       });
@@ -200,7 +217,7 @@ const VideoGenerationScreen = () => {
     const { data, error, success } = await expandText(text);
 
     if (!success) {
-      updateErrorState({ message: error, success: false });
+      updateMessageState({ message: error, success: false });
       return;
     }
 
@@ -212,7 +229,7 @@ const VideoGenerationScreen = () => {
       return { loading: false, value: storedValues };
     });
 
-    updateErrorState({
+    updateMessageState({
       message:
         "Copy paste the most recent AI response in 'Your Story' tab and continue",
       success: true,
@@ -229,7 +246,7 @@ const VideoGenerationScreen = () => {
     } = formState;
 
     if (text.length == 0 && aiGeneratedTextState.value.length == 0) {
-      updateErrorState({
+      updateMessageState({
         message: "Write a story to continue!",
         success: false,
       });
@@ -237,7 +254,7 @@ const VideoGenerationScreen = () => {
     }
 
     if (brandLogoURL.length == 0) {
-      updateErrorState({
+      updateMessageState({
         message: "Brand Logo field is missing!",
         success: false,
       });
@@ -245,7 +262,7 @@ const VideoGenerationScreen = () => {
     }
 
     if (minimumDuration.length == 0) {
-      updateErrorState({
+      updateMessageState({
         message: "Minimum duration field is missing!",
         success: false,
       });
@@ -253,7 +270,7 @@ const VideoGenerationScreen = () => {
     }
 
     if (videoDescription.length == 0) {
-      updateErrorState({
+      updateMessageState({
         message: "Brand Logo field is missing!",
         success: false,
       });
@@ -261,7 +278,7 @@ const VideoGenerationScreen = () => {
     }
 
     if (videoName.length == 0) {
-      updateErrorState({
+      updateMessageState({
         message: "Brand Logo field is missing!",
         success: false,
       });
@@ -279,12 +296,12 @@ const VideoGenerationScreen = () => {
     });
 
     if (!success) {
-      updateErrorState({ message: error, success });
+      updateMessageState({ message: error, success });
       setVideoState((prevState) => ({ ...prevState, loading: false }));
       return;
     }
 
-    socketState.emit(join_room, { jobId: data });
+    socketState.emit(join_video_generation_room, { jobId: data });
   };
 
   const toggleFullScreen = async () => {
@@ -317,6 +334,19 @@ const VideoGenerationScreen = () => {
       }
     }
   };
+
+  useEffect(() => {
+    const { audio, output, scenes } = testVideo.data.renderParams;
+    setStoryboardState({
+      audioState: audio,
+      loadingState: false,
+      outputState: output,
+      sceneState: scenes,
+      selectedSceneIndex: null,
+      trimActivatedState: false,
+      trimmedBackgroundState: {},
+    });
+  }, []);
 
   useEffect(() => {
     if (hideTextLabelState) {
@@ -354,20 +384,23 @@ const VideoGenerationScreen = () => {
 
   useEffect(() => {
     socketState.on("connect", () => {
-      socketState.on(join_room_success, (payload: IStringResponse) => {
-        const { data, error, success } = payload;
+      socketState.on(
+        join_video_generation_room_success,
+        (payload: IStringResponse) => {
+          const { data, error, success } = payload;
 
-        if (!success) {
-          updateErrorState({ message: error, success: false });
-          return;
+          if (!success) {
+            updateMessageState({ message: error, success: false });
+            return;
+          }
+
+          // your video is processing
+          updateMessageState({
+            message: "Your video is processing!",
+            success: true,
+          });
         }
-
-        // your video is processing
-        updateErrorState({
-          message: "Your video is processing!",
-          success: true,
-        });
-      });
+      );
 
       socketState.on(
         video_generation_success,
@@ -375,15 +408,27 @@ const VideoGenerationScreen = () => {
           const { data, error, success } = payload;
 
           if (!success) {
-            updateErrorState({ message: error, success: false });
+            updateMessageState({ message: error, success: false });
             return;
           }
+
+          const { audio, output, scenes } = data.renderParams;
+
+          setStoryboardState({
+            audioState: audio,
+            loadingState: false,
+            outputState: output,
+            sceneState: scenes,
+            selectedSceneIndex: null,
+            trimActivatedState: false,
+            trimmedBackgroundState: {},
+          });
 
           // update a particular state that will trigger render video element
           setVideoState({
             loading: false,
             value: {
-              audio: data.renderParams.audio.tts,
+              audio: data.renderParams.audio.tts!,
               videos: data.renderParams.scenes.map(
                 ({ background: { src }, time }) => ({ src: src[0].url, time })
               ),
@@ -492,6 +537,14 @@ const VideoGenerationScreen = () => {
       };
       videoElement.addEventListener("volumechange", handleVolumechangeEVent);
 
+      // stop video when it has gotten to end of audio
+      if (Math.floor(videoCurrentTimeState) >= Math.floor(videoDurationState)) {
+        videoElement.pause();
+        setVideoWatchedTimeState(0);
+        setVideoPlayIdState(0);
+        videoElement.currentTime = 0;
+      }
+
       return () => {
         videoElement.removeEventListener("ended", handleEndedEvent);
         videoElement.removeEventListener(
@@ -580,13 +633,56 @@ const VideoGenerationScreen = () => {
   }, [videoState]);
 
   useEffect(() => {
-    const progressBardWidth =
-      (videoCurrentTimeState / videoDurationState) * 100;
+    const progressBarWidth = (videoCurrentTimeState / videoDurationState) * 100;
 
     if (progressBarRef.current) {
-      progressBarRef.current.style.width = `${progressBardWidth}%`;
+      progressBarRef.current.style.width = `${progressBarWidth}%`;
     }
   }, [videoCurrentTimeState]);
+
+  useEffect(() => {
+    if (triggerTimerState) {
+      const messageId = updateMessageState({
+        message: `Navigating you to /editor page to customize video scenes in ${redirectTimerState} seconds!`,
+        timeoutInMilliseconds: 5500,
+        success: true,
+      });
+
+      setRedirectMessageIdState(messageId);
+
+      const intervalId = setInterval(() => {
+        setRedirectTimerState((prevState) => prevState - 1);
+      }, 1000);
+
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [triggerTimerState]);
+
+  useEffect(() => {
+    if (redirectMessageIdState) {
+      editMessageInMessageState(
+        redirectMessageIdState,
+        `Navigating you to /editor page to customize video scenes in ${redirectTimerState} seconds!`
+      );
+    }
+
+    if (redirectTimerState == 0) {
+      router.push("/editor");
+    }
+  }, [redirectMessageIdState, redirectTimerState]);
+
+  useEffect(() => {
+    if (sceneState.length > 0) {
+      // let's trigger navigating to /editor page
+      setTriggerTimerState(true);
+
+      setAiGeneratedScenes(
+        sceneState.map((scene) => scene.background.src[0].url)
+      );
+    }
+  }, [sceneState]);
 
   return (
     <MainVideoGeneration $marginTop={navbarHeightState}>
@@ -744,6 +840,12 @@ const VideoGenerationScreen = () => {
               )}
             </DivContainer>
           </Form>
+          <FormButton
+            disabled={ffmpegState == null}
+            onClick={() => setTriggerTimerState(true)}
+          >
+            /Editor
+          </FormButton>
         </MainForm>
         {videoState.loading ? (
           <DivContainer $justifyContent="center" $height="200px"></DivContainer>

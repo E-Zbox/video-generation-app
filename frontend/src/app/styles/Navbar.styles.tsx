@@ -11,6 +11,7 @@ export const MainNav = styled.main`
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
+  z-index: 2;
   padding-left: calc(var(--ten-px) * 2);
   box-shadow: 0px 1px 3px 1px ${brown01}12;
   `}

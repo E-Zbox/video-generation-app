@@ -268,13 +268,13 @@ export const TextareaH4 = styled.span<ITextareaH4>`
 `;
 
 export const MainAIGenerated = styled.div`
-  ${({ theme: { blue03, brown01 } }) => `
+  ${({ theme: { blue04, brown01 } }) => `
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     justify-content: flex-start;
     overflow: hidden;
-    background-color: ${blue03}1a;
+    background-color: ${blue04}1a;
     padding: calc(var(--ten-px) * 2);
     box-shadow: 0px 0px 3px 1px inset ${brown01}32;
   `}
@@ -368,7 +368,7 @@ export const MainVideo = styled.main`
 `;
 
 export const VideoControls = styled.div<IVideoControls>`
-  ${({ $show, theme: { blue04 } }) => `
+  ${({ $show, theme: { blue05 } }) => `
   left: 0px;
   bottom: 0px;
   height: 40px;
@@ -381,7 +381,7 @@ export const VideoControls = styled.div<IVideoControls>`
   padding: var(--ten-px);
   box-shadow: 0 -1px 1px #aaa1;
   transition: all 0.3s ease-in-out;
-  background-color: ${blue04}a3;
+  background-color: ${blue05}a3;
   ${
     $show
       ? `

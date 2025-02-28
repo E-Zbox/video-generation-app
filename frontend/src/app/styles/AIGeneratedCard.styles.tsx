@@ -26,14 +26,14 @@ export const MainCard = styled.div`
 `;
 
 export const CardText = styled.h4`
-  ${({ theme: { blue01, blue04, brown01 } }) => `
+  ${({ theme: { blue01, blue05, brown01 } }) => `
     --padding: calc(var(--ten-px) * 2);
     color: ${blue01};
     font-family: Poppins;
     font-size: 0.9rem;
     font-weight: 400;
     letter-spacing: 1px;
-    background-color: ${blue04};
+    background-color: ${blue05};
     border: 1px dashed ${brown01}22;
     margin-left: var(--ten-px);
     flex-grow: 1; /* Fills remaining width */
