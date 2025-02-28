@@ -11,7 +11,7 @@ const readFile = promisify(fs.readFile);
 const unlinkFile = promisify(fs.unlink);
 
 // configure ffmpeg to use the installed path
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+// ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 export const trimVideo = async (
   videoUrl: string,
