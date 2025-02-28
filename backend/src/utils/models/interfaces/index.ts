@@ -18,7 +18,7 @@ export interface IStringsResponse extends IGenericResponse<string[]> {}
 
 export interface IThumbnail {
   src: string;
-  startTime: number;
+  startTimeInSeconds: number;
 }
 
 export interface IThumbnailsResponse extends IGenericResponse<IThumbnail[]> {}

@@ -41,7 +41,7 @@ export const generateThumbnails = async (
     const data: IThumbnail[] = [];
 
     for (let index = 0; index < maxThumbnails; index++) {
-      let startTime = index * offset;
+      let startTimeInSeconds = index * offset;
       let filename = `thumbnail-${Math.random()}-${Date.now()}.png`;
       let outputPath = path.join(outputDir, filename);
 
@@ -52,7 +52,7 @@ export const generateThumbnails = async (
             count: 1,
             filename,
             folder: outputDir,
-            timemarks: [startTime],
+            timemarks: [startTimeInSeconds],
             size: "150x?", // 150px width, height auto
             fastSeek: true, // for better performance
           })
@@ -62,7 +62,7 @@ export const generateThumbnails = async (
 
       let src = await readFileAsBase64(outputPath);
 
-      data.push({ src: `data:image/png;base64,${src}`, startTime });
+      data.push({ src: `data:image/png;base64,${src}`, startTimeInSeconds });
 
       // Clean up the temporary file
       await unlinkFile(outputPath).catch(() => {
