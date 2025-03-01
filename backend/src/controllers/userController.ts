@@ -12,7 +12,7 @@ import {
 import { checkForObjectKeys } from "@/utils/config/check";
 // errors
 import { RequestBodyError } from "@/utils/errors";
-import { IScene } from "@/utils/api/interface";
+import { IGenerateVideoScene, IScene } from "@/utils/api/interface";
 
 export const expandTextController = async (
   req: Request,
@@ -52,6 +52,7 @@ export const generateVideoController = async (
       brandLogoURL,
       minimumDuration: _minimumDuration,
       text,
+      scenes: _scenes,
       videoDescription,
       videoName,
     } = req.body;
@@ -64,7 +65,7 @@ export const generateVideoController = async (
         "brandLogoVerticalAlignment",
         "brandLogoURL",
         "minimumDuration",
-        "text",
+        // "text",
         "videoDescription",
         "videoName",
       ],
@@ -102,13 +103,10 @@ export const generateVideoController = async (
       speaker = "Ivy (child)";
     }
 
-    const { data, error, success } = await generateVideo(
-      accessToken,
-      {
-        videoDescription,
-        videoName,
-      },
-      [
+    let scenes: IGenerateVideoScene[] = [];
+
+    if (!_scenes) {
+      scenes = [
         {
           minimumDuration,
           splitTextOnNewLine: true,
@@ -116,7 +114,18 @@ export const generateVideoController = async (
           text,
           voiceOver: true,
         },
-      ],
+      ];
+    } else {
+      scenes = _scenes;
+    }
+
+    const { data, error, success } = await generateVideo(
+      accessToken,
+      {
+        videoDescription,
+        videoName,
+      },
+      scenes,
       {
         horizontalAlignment: brandLogoHorizontalAlignment,
         url: brandLogoURL,

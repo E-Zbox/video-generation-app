@@ -9,7 +9,7 @@ export interface IPictoryAccessTokenResponse
   extends IGenericResponse<IPictoryAccessToken> {}
 
 export interface IGenerateVideoScene {
-  backgroundURI?: string;
+  backgroundUri?: string;
   minimumDuration: number;
   splitTextOnNewLine: boolean;
   splitTextOnPeriod: boolean;
