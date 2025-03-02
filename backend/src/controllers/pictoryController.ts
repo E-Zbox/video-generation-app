@@ -56,7 +56,10 @@ export const pictoryWebhookController = async (
 
     if (data.status == "completed") {
       io.to(create_video_render_room(job_id)).emit(video_render_success, {
-        data,
+        data: {
+          jobId: job_id,
+          ...data,
+        },
         error: "",
         success: true,
       });
