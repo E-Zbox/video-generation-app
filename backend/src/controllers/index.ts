@@ -56,9 +56,9 @@ export const globalErrorController = async (
       break;
     default:
       console.log("---");
-      console.log(JSON.stringify(error.name));
+      console.log(error.name);
       console.log("^^^^^^^^^^^^^^^^^^");
-      console.log(JSON.stringify(error));
+      console.log(error);
       response.error = "Something went wrong!!";
   }
 
