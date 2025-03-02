@@ -276,6 +276,9 @@ export const monitorVideoStatus = async (
         }
       }
 
+      console.log(_result);
+      console.log("pictory >> _result");
+
       throw data.error_message;
     }
 
