@@ -34,7 +34,7 @@ export const generateThumbnails = async (
   try {
     await ensureDir(outputDir);
 
-    maxThumbnails = Math.min(maxThumbnails, 50);
+    maxThumbnails = Math.min(duration, maxThumbnails);
 
     let offset = duration / maxThumbnails;
 
