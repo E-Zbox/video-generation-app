@@ -64,7 +64,7 @@ export interface IAnimation {
 export interface ITextLine {
   text: string;
   text_animation: IAnimation[];
-  text_bg_animation: IAnimation;
+  text_bg_animation: IAnimation[];
 }
 
 export interface ISubScene {
@@ -79,7 +79,7 @@ export interface ISubScene {
 
 export interface IScene {
   background: {
-    src: IBackgroundSrc;
+    src: IBackgroundSrc[];
     color: string;
     bg_animation: {
       animation: string;

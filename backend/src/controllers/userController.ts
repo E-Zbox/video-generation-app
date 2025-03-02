@@ -242,14 +242,16 @@ export const generateDownloadableVideoController = async (
       }
 
       // check that all the fields required in scene.background.src are present
-      errorMessage = checkForObjectKeys(
-        ["url", "type", "library", "loop_video", "mute"],
-        scene.background.src
-      );
+      scene.background.src.every((src) => {
+        errorMessage = checkForObjectKeys(
+          ["url", "type", "library", "loop_video", "mute"],
+          src
+        );
 
-      if (errorMessage) {
-        throw new RequestBodyError(errorMessage);
-      }
+        if (errorMessage) {
+          throw new RequestBodyError(errorMessage);
+        }
+      });
 
       // loop through sub_scenes and ensure all the fields are present
       scene.sub_scenes.every((sub_scene) => {
@@ -282,20 +284,22 @@ export const generateDownloadableVideoController = async (
             throw new RequestBodyError(errorMessage);
           }
 
-          errorMessage = checkForObjectKeys(
-            ["animation", "source", "speed", "type"],
-            text_line.text_bg_animation
-          );
+          text_line.text_bg_animation.every((text_bg_animation) => {
+            errorMessage = checkForObjectKeys(
+              ["animation", "source", "speed", "type"],
+              text_bg_animation
+            );
 
-          if (errorMessage) {
-            throw new RequestBodyError(errorMessage);
-          }
+            if (errorMessage) {
+              throw new RequestBodyError(errorMessage);
+            }
+          });
 
           // loop through every text_animation element and ensure all animation fields are present
           text_line.text_animation.every((animation) => {
             let errorMessage = checkForObjectKeys(
               ["animation", "source", "speed", "type"],
-              text_line.text_bg_animation
+              animation
             );
 
             if (errorMessage) {

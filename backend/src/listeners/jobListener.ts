@@ -3,7 +3,6 @@ import { Server, Socket } from "socket.io";
 import { emitEvents, onEvents, roomCreators } from ".";
 // interface
 import { IJoinRoomPayload } from "./interface";
-import { error } from "console";
 
 export default function (ioServer: Server, socket: Socket) {
   const { join_video_generation_room_success, join_video_render_room_success } =
