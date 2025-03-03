@@ -50,6 +50,7 @@ const UploadMedia = (props: IProps) => {
   const [metadataState, setMetadataState] = useState<IVideoMeta>({
     duration: 0,
     name: "",
+    initialDuration: 0,
     videoHeight: 0,
     videoWidth: 0,
   });
@@ -63,6 +64,7 @@ const UploadMedia = (props: IProps) => {
     setMetadataState({
       name: file.name,
       duration: currentTarget.duration,
+      initialDuration: currentTarget.duration,
       videoHeight: currentTarget.videoHeight,
       videoWidth: currentTarget.videoWidth,
     });
