@@ -223,7 +223,7 @@ export const generateDownloadableVideoController = async (
 
       // ensure all values in scene.background are present
       errorMessage = checkForObjectKeys(
-        ["src", "color", "bg_animation", "time"],
+        ["src", "color", "bg_animation"],
         scene.background
       );
 

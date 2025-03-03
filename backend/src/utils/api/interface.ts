@@ -84,7 +84,7 @@ export interface IScene {
     bg_animation: {
       animation: string;
     };
-    time: number;
+    // time: number;
   };
   time: number;
   sub_scenes: ISubScene[];
