@@ -22,16 +22,22 @@ import { IMedia } from "@/api/interfaces/media";
 import { IVoiceOverTrack } from "@/api/interfaces/voiceover";
 // trayTab
 import { IMenu, menu } from "./trayTab";
+// utils
+import { ISSMLTag } from "../utils/ssml/interface";
 
 const NEXT_PUBLIC_SERVER_BASE_URL = process.env.NEXT_PUBLIC_SERVER_BASE_URL;
 
 interface IAppStore {
+  brandLogoURLState: string;
+  setBrandLogoURLState: (newState: string) => void;
   ffmpegState: null | FFmpeg;
   setFFmpegState: (newState: FFmpeg) => void;
   messageState: IMessageRecord;
   deleteFromMessageState: (id: string) => void;
   editMessageInMessageState: (id: string, newMessage: string) => void;
   updateMessageState: (newState: IMessage) => string;
+  minimumVideoDurationState: number;
+  setMinimumVideoDurationState: (newState: number) => void;
   navbarHeightState: string;
   setNavbarHeightState: (newState: string) => void;
   socketState: Socket;
@@ -39,6 +45,9 @@ interface IAppStore {
 }
 
 export const useAppStore = create<IAppStore>((set) => ({
+  brandLogoURLState: "",
+  setBrandLogoURLState: (newState: string) =>
+    set({ brandLogoURLState: newState }),
   ffmpegState: null,
   setFFmpegState: (newState: FFmpeg) => set({ ffmpegState: newState }),
   messageState: {},
@@ -72,6 +81,9 @@ export const useAppStore = create<IAppStore>((set) => ({
 
     return id;
   },
+  minimumVideoDurationState: 0,
+  setMinimumVideoDurationState: (newState: number) =>
+    set({ minimumVideoDurationState: newState }),
   navbarHeightState: "0px",
   setNavbarHeightState: (newState: string) =>
     set({ navbarHeightState: newState }),
@@ -92,11 +104,41 @@ interface IReplaceBgState {
   type: "image" | "video";
 }
 
+interface IGeneratedVideo {
+  processing: boolean;
+  audioURL: string;
+  videoName: string;
+  txtFile: string;
+  thumbnail: string;
+  videoDuration: number;
+  videoURL: string;
+  vttFile: string;
+  srtFile: string;
+  status: "completed" | "in-progress";
+}
+
+interface IGeneratedVideoRecord {
+  [jobId: string]: IGeneratedVideo;
+}
+
+interface ISelectedVoiceOver {
+  id: string;
+  language: string;
+}
+
 interface IEditorStore {
   aiGeneratedScenes: string[];
   setAiGeneratedScenes: (newState: string[]) => void;
   selectedAiGeneratedSceneIndex: null | number;
   setSelectedAiGeneratedScenes: (newState: null | number) => void;
+  generatingNewScenes: boolean;
+  setGeneratingNewScenes: (newState: boolean) => void;
+  generatedVideoState: IGeneratedVideoRecord;
+  deleteGeneratedVideoState: (jobId: string) => void;
+  updatedGeneratedVideoState: (
+    jobId: string,
+    generatedVideo: IGeneratedVideo
+  ) => void;
   replaceBgState: IReplaceBgState;
   setReplaceBgState: (newState: IReplaceBgState) => void;
   selectedMediaState: IMediaFile[];
@@ -105,6 +147,8 @@ interface IEditorStore {
   tabMenuState: IMenu[];
   selectTabMenuState: (index: number) => void;
   selectedTabMenuIndexState: number;
+  deleteLastTabMenuState: () => void;
+  updateTabMenuState: (newState: string) => void;
   uploadedMediaState: IMediaResponseRecord;
   updateUploadedMediaState: (newState: IMedia) => void;
   removeFromUploadedMediaState: (id: string) => void;
@@ -114,6 +158,7 @@ interface IEditorStore {
   pauseVoiceoverTrackState: (language: string, voiceoverId: string) => void;
   playVoiceoverTrackState: (language: string, voiceoverId: string) => void;
   selectVoiceoverTrackState: (language: string, voiceoverId: string) => void;
+  selectedVoiceOverTrackState: ISelectedVoiceOver;
   setVoiceoverTrackState: (newState: IVoiceOverTrack[]) => void;
   thumbnailState: IThumbnailRecord;
   updateThumbnailState: (urlKey: string, newState: string) => void;
@@ -130,6 +175,34 @@ export const useEditorStore = create<IEditorStore>()((set) => ({
   selectedAiGeneratedSceneIndex: null,
   setSelectedAiGeneratedScenes: (newState: null | number) =>
     set({ selectedAiGeneratedSceneIndex: newState }),
+  generatingNewScenes: false,
+  setGeneratingNewScenes: (newState: boolean) =>
+    set({ generatingNewScenes: newState }),
+  generatedVideoState: {},
+  deleteGeneratedVideoState: (jobId: string) =>
+    set((prevState) => {
+      const updatedState: IGeneratedVideoRecord = {
+        ...prevState.generatedVideoState,
+      };
+
+      delete updatedState[jobId];
+
+      return {
+        ...prevState,
+        generatedVideoState: updatedState,
+      };
+    }),
+  updatedGeneratedVideoState: (
+    jobId: string,
+    generatedVideo: IGeneratedVideo
+  ) =>
+    set((prevState) => ({
+      ...prevState,
+      generatedVideoState: {
+        ...prevState.generatedVideoState,
+        [jobId]: generatedVideo,
+      },
+    })),
   replaceBgState: { activated: false, transientValue: "", type: "video" },
   setReplaceBgState: (newState: IReplaceBgState) =>
     set({ replaceBgState: newState }),
@@ -169,6 +242,29 @@ export const useEditorStore = create<IEditorStore>()((set) => ({
       };
     }),
   selectedTabMenuIndexState: 0,
+  deleteLastTabMenuState: () =>
+    set((prevState) => {
+      const updatedTabMenuState: IMenu[] = [...prevState.tabMenuState];
+
+      updatedTabMenuState.splice(updatedTabMenuState.length - 1);
+
+      return {
+        ...prevState,
+        tabMenuState: updatedTabMenuState,
+      };
+    }),
+  updateTabMenuState: (newState: string) =>
+    set((prevState) => {
+      const updatedState: IMenu[] = [
+        ...prevState.tabMenuState.map((tab) => ({ ...tab, selected: false })),
+        { id: prevState.tabMenuState.length, selected: true, text: newState },
+      ];
+      return {
+        ...prevState,
+        tabMenuState: updatedState,
+        selectedTabMenuIndexState: updatedState.length - 1,
+      };
+    }),
   uploadedMediaState: {},
   updateUploadedMediaState: (newState: IMedia) =>
     set((prevState) => ({
@@ -251,6 +347,10 @@ export const useEditorStore = create<IEditorStore>()((set) => ({
         prevState.voiceoverTrackState
       );
       const updatedState: IVoiceOverRecord = {};
+      const selectedVoiceOverTrackState: ISelectedVoiceOver = {
+        id: voiceoverId,
+        language,
+      };
 
       languages.forEach((_lang) => {
         const ids = Object.getOwnPropertyNames(
@@ -273,6 +373,7 @@ export const useEditorStore = create<IEditorStore>()((set) => ({
       return {
         ...prevState,
         voiceoverTrackState: updatedState,
+        selectedVoiceOverTrackState,
       };
     }),
   setVoiceoverTrackState: (newState: IVoiceOverTrack[]) =>
@@ -291,7 +392,8 @@ export const useEditorStore = create<IEditorStore>()((set) => ({
           [`${voiceoverTrack.id}`]: {
             ...voiceoverTrack,
             playing: false,
-            selected: false,
+            selected: voiceoverTrack.name === "Ivy (child)",
+            // selected: false,
           },
         };
       });
@@ -301,6 +403,10 @@ export const useEditorStore = create<IEditorStore>()((set) => ({
         voiceoverTrackState,
       };
     }),
+  selectedVoiceOverTrackState: {
+    id: "",
+    language: "",
+  },
   thumbnailState: {},
   updateThumbnailState: (urlKey: string, newState: string) =>
     set((prevstate) => {
@@ -348,12 +454,26 @@ interface ITrimmedThumbnailRecord {
   [urlKey: string]: IThumbnail[];
 }
 
+interface ISelectedTextLineTag {
+  sceneIndex: number;
+  subSceneIndex: number;
+  textLineIndex: number;
+  tagTextIndex: number;
+}
+
+interface ICachedSSMLTag extends ISSMLTag {}
+
 interface IStoryboardEditorState {
   audioState: IStoryboardAudio;
   loadingState: boolean;
   outputState: IStoryboardOutput;
   sceneState: IStoryboardScene[];
   selectedSceneIndex: null | number;
+  cachedSSMLTagState: null | ICachedSSMLTag;
+  editTagToolActivatedState: boolean;
+  selectedTextLineTagState: null | ISelectedTextLineTag;
+  textEditorActivatedState: boolean;
+  detectedChangeInTextLine: boolean;
   trimActivatedState: boolean;
   trimmedBackgroundVideoState: ITrimmedBackgroundRecord;
   trimmedThumbnailState: ITrimmedThumbnailRecord;
@@ -371,12 +491,30 @@ interface IStoryboardEditorStore extends IStoryboardEditorState {
     type: "image" | "video"
   ) => void;
   setSelectedSceneIndex: (newState: number) => void;
+  setCachedSSMLTagState: (newState: null | ICachedSSMLTag) => void;
+  setEditTagToolActivatedState: (newState: boolean) => void;
+  setSelectedTextLineTagState: (newState: null | ISelectedTextLineTag) => void;
+  deleteSceneSubSceneTextLineState: (
+    sceneIndex: number,
+    subSceneIndex: number,
+    textLineIndex: number
+  ) => void;
+  updateSceneSubSceneTextLineState: (
+    sceneIndex: number,
+    subSceneIndex: number,
+    textLineIndex: number,
+    newState: string
+  ) => void;
+  toggleTextEditorActivatedState: () => void;
+  setTextEditorActivatedState: (newState: boolean) => void;
   setTrimActivatedState: (newState: boolean) => void;
   updateTrimmedBackgroundVideoState: (
     urlKey: string,
     trimmedBackground: ITrimmedBackgroundVideo
   ) => void;
   updateTrimmedThumbnailState: (urlKey: string, newState: IThumbnail[]) => void;
+  voiceoverAudioRefState: null | HTMLAudioElement;
+  setVoiceoverAudioRefState: (newState: HTMLAudioElement) => void;
 }
 
 export const useStoryboardEditorStore = create<IStoryboardEditorStore>()(
@@ -448,9 +586,107 @@ export const useStoryboardEditorStore = create<IStoryboardEditorStore>()(
     selectedSceneIndex: null,
     setSelectedSceneIndex: (newState: number) =>
       set({ selectedSceneIndex: newState }),
+    cachedSSMLTagState: null,
+    setCachedSSMLTagState: (newState: null | ICachedSSMLTag) =>
+      set({ cachedSSMLTagState: newState }),
+    editTagToolActivatedState: false,
+    setEditTagToolActivatedState: (newState: boolean) =>
+      set({ editTagToolActivatedState: newState }),
+    selectedTextLineTagState: null,
+    setSelectedTextLineTagState: (newState: null | ISelectedTextLineTag) =>
+      set({ selectedTextLineTagState: newState }),
+    deleteSceneSubSceneTextLineState: (
+      sceneIndex: number,
+      subSceneIndex: number,
+      textLineIndex: number
+    ) =>
+      set((prevState) => {
+        const updatedState: IStoryboardScene[] = prevState.sceneState.map(
+          (scene, scene_index) => {
+            if (scene_index !== sceneIndex) {
+              return scene;
+            }
+
+            return {
+              ...scene,
+              sub_scenes: scene.sub_scenes.map((subScene, sub_scene_index) => {
+                if (sub_scene_index !== subSceneIndex) {
+                  return subScene;
+                }
+
+                return {
+                  ...subScene,
+                  text_lines: subScene.text_lines.splice(textLineIndex, 1),
+                };
+              }),
+            };
+          }
+        );
+
+        return {
+          ...prevState,
+          detectedChangeInTextLine: true,
+          sceneState: updatedState,
+        };
+      }),
+    updateSceneSubSceneTextLineState: (
+      sceneIndex: number,
+      subSceneIndex: number,
+      textLineIndex: number,
+      newState: string
+    ) =>
+      set((prevState) => {
+        const updatedState: IStoryboardScene[] = prevState.sceneState.map(
+          (scene, scene_index) => {
+            if (scene_index !== sceneIndex) {
+              return scene;
+            }
+
+            return {
+              ...scene,
+              sub_scenes: scene.sub_scenes.map((subScene, sub_scene_index) => {
+                if (sub_scene_index !== subSceneIndex) {
+                  return subScene;
+                }
+
+                return {
+                  ...subScene,
+                  text_lines: subScene.text_lines.map(
+                    (textLine, text_line_index) => {
+                      if (text_line_index !== textLineIndex) {
+                        return textLine;
+                      }
+
+                      return {
+                        ...textLine,
+                        text: newState,
+                      };
+                    }
+                  ),
+                };
+              }),
+            };
+          }
+        );
+
+        return {
+          ...prevState,
+          detectedChangeInTextLine: true,
+          sceneState: updatedState,
+        };
+      }),
+    textEditorActivatedState: false,
+    toggleTextEditorActivatedState: () =>
+      set((prevState) => ({
+        ...prevState,
+        textEditorActivatedState: !prevState.textEditorActivatedState,
+      })),
+    setTextEditorActivatedState: (newState: boolean) =>
+      set({ textEditorActivatedState: newState }),
     trimActivatedState: false,
     setTrimActivatedState: (newState: boolean) =>
       set({ trimActivatedState: newState }),
+    detectedChangeInTextLine: false,
     trimmedBackgroundVideoState: {},
     updateTrimmedBackgroundVideoState: (
       urlKey: string,
@@ -459,7 +695,7 @@ export const useStoryboardEditorStore = create<IStoryboardEditorStore>()(
       set((prevState) => {
         const updatedState: ITrimmedBackgroundRecord = {
           ...prevState.trimmedBackgroundVideoState,
-          [urlKey]: trimmedBackground,
+          [`${prevState.selectedSceneIndex!}-${urlKey}`]: trimmedBackground,
         };
 
         return {
@@ -480,5 +716,8 @@ export const useStoryboardEditorStore = create<IStoryboardEditorStore>()(
           trimmedThumbnailState: updatedState,
         };
       }),
+    voiceoverAudioRefState: null,
+    setVoiceoverAudioRefState: (newState: HTMLAudioElement) =>
+      set({ voiceoverAudioRefState: newState }),
   }))
 );

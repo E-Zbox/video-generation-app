@@ -66,10 +66,13 @@ export interface IStoryboardScene {
     bg_animation: {
       animation: string;
     };
-    // time: number;
   };
   time: number;
   sub_scenes: ISubScene[];
+  music: boolean;
+  tts: boolean;
+  subtitle: boolean;
+  subtitles: { text: string; time: number }[];
 }
 
 export interface IStoryboard {
