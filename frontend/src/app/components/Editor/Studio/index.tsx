@@ -412,6 +412,7 @@ const Studio = () => {
           subtitles: scene.subtitles.map((subtitle, index) => ({
             ...subtitle,
             text: scene.sub_scenes[index].text_lines[index].text,
+            time,
           })),
         };
       });
