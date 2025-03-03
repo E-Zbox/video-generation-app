@@ -108,6 +108,15 @@ export interface IVoiceOverTrack {
   // ssmlSupportCategory: string;
 }
 
+export interface IUploadToCloudinary {
+  mimetype: string;
+  path: string;
+  publicId: string;
+}
+
+export interface IUploadToCloudinaryResponse
+  extends IGenericResponse<IUploadToCloudinary> {}
+
 export interface IStoryboardResponse
   extends IGenericResponse<{
     data: {

@@ -4,19 +4,23 @@ import fs from "fs-extra";
 import path from "path";
 import { promisify } from "util";
 // interfaces
+import { ITrimVideoResponse } from "./interface";
 import {
   IStringResponse,
-  IStringsResponse,
   IThumbnail,
   IThumbnailsResponse,
 } from "../models/interfaces";
+// utils/models
+import { createMedia } from "../models/media";
+import { uploadToCloudinary } from "../api/cloudinary";
+import cloudinary from "@/config/cloudinary";
 
 const ensureDir = promisify(fs.ensureDir);
 const readFile = promisify(fs.readFile);
 const unlinkFile = promisify(fs.unlink);
 
 // configure ffmpeg to use the installed path
-// ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 export const generateThumbnails = async (
   videoUrl: string,
@@ -90,9 +94,16 @@ export const trimVideo = async (
   videoUrl: string,
   startTimeInSeconds: number,
   offsetInSeconds: number
-): Promise<IStringResponse> => {
-  let response: IStringResponse = {
-    data: "",
+): Promise<ITrimVideoResponse> => {
+  let response: ITrimVideoResponse = {
+    data: {
+      base64: "",
+      createdAt: new Date(),
+      mimetype: "",
+      path: "",
+      publicId: "",
+      updatedAt: new Date(),
+    },
     error: "",
     success: false,
   };
@@ -122,8 +133,34 @@ export const trimVideo = async (
     });
 
     // Read the file as base64 after ffmpeg has finished
-    response.data = await readFileAsBase64(outputPath);
-    response.success = true;
+    const base64 = await readFileAsBase64(outputPath);
+
+    // upload to cloudinary and upload
+    const cloudinaryResponse = await uploadToCloudinary(outputPath);
+
+    if (!cloudinaryResponse.success) {
+      throw cloudinaryResponse.error;
+    }
+
+    // in case Media upload fails, we want to delete the uploaded trimmed video from cloudinary
+    response.data.publicId = cloudinaryResponse.data.publicId;
+
+    const newMediaResponse = await createMedia([
+      { ...cloudinaryResponse.data },
+    ]);
+
+    if (!newMediaResponse.success) {
+      throw newMediaResponse.error;
+    }
+
+    response = {
+      data: {
+        ...newMediaResponse.data[0],
+        base64: `data:video/mp4;base64,${base64}`,
+      },
+      error: "",
+      success: true,
+    };
 
     // Clean up the temporary file
     await unlinkFile(outputPath).catch(() => {
@@ -131,6 +168,10 @@ export const trimVideo = async (
       console.warn(`Failed to delete temporary file: ${outputPath}`);
     });
   } catch (error) {
+    const { publicId } = response.data;
+    if (publicId.length) {
+      await cloudinary.api.delete_resources([publicId]);
+    }
     response = {
       ...response,
       error: `${error}`,
@@ -145,112 +186,3 @@ export const readFileAsBase64 = async (filename: string): Promise<string> => {
 
   return Buffer.from(binaryData).toString("base64");
 };
-
-/*
-  export const generateThumbnailsFromVideo = async (
-  ffmpeg: FFmpeg,
-  videoFile: string | File,
-  duration: number
-): Promise<IThumbnailsResponse> => {
-  let response: IThumbnailsResponse = {
-    data: [],
-    error: "",
-    success: false,
-  };
-  try {
-    console.log("start of thumbnails generation from video");
-    console.log(await ffmpeg.listDir("/"));
-    console.log({ videoFile, duration });
-    const videoFileName =
-      typeof videoFile == "string"
-        ? `video-${Math.random()}-${Date.now()}.mp4`
-        : videoFile.name;
-
-    // let's file to ffmpeg.wasm
-    let writeFile = await ffmpeg.writeFile(
-      videoFileName,
-      await fetchFile(videoFile)
-    );
-
-    let MAX_NUMBER_OF_IMAGES = 20;
-
-    let NUMBER_OF_IMAGES = Math.min(duration, MAX_NUMBER_OF_IMAGES);
-
-    // let offset = duration === MAX_NUMBER_OF_IMAGES ? 1 : duration / NUMBER_OF_IMAGES;
-    let offset = duration / NUMBER_OF_IMAGES;
-
-    const arrayOfImageURIs: IThumbnail[] = [];
-
-    console.log({ NUMBER_OF_IMAGES, offset, duration, MAX_NUMBER_OF_IMAGES });
-
-    for (let index = 0; index < NUMBER_OF_IMAGES; index++) {
-      let startTimeInSeconds = Math.round(index * offset);
-
-      if (startTimeInSeconds + offset > duration && offset > 1) {
-        console.log("something happened here");
-        console.log({ startTimeInSeconds, offset, duration });
-        offset = 0;
-      }
-
-      const filename = `img-${Math.random()}-${Date.now()}.png`;
-
-      ffmpeg
-        .exec([
-          "-threads",
-          "1", // use only one thread
-          "-ss",
-          timeFormatter(startTimeInSeconds),
-          "-i",
-          videoFileName,
-          "-t",
-          "00:00:01",
-          "-vf",
-          "scale=150:-1",
-          "-frames:v",
-          "1", // extract only one frame
-          "-q:v",
-          "2", // lower quality, less memory usage
-          filename,
-        ])
-        .then((res) => {
-          console.log({ res, index });
-        })
-        .catch((err) => {
-          console.log(err);
-          throw err;
-        });
-
-      const data = await ffmpeg.readFile(filename);
-
-      if (data instanceof Uint8Array) {
-        let blob = new Blob([data.buffer as BlobPart], {
-          type: "image/png",
-        });
-
-        let src: string = await readFileAsBase64(blob);
-
-        arrayOfImageURIs.push({ src, startTimeInSeconds });
-      }
-
-      await ffmpeg.deleteFile(filename);
-
-      console.log(`${index} / ${NUMBER_OF_IMAGES}`);
-    }
-
-    response = {
-      data: arrayOfImageURIs,
-      error: "",
-      success: true,
-    };
-
-    await ffmpeg.deleteFile(videoFileName);
-  } catch (error) {
-    response = {
-      ...response,
-      error: `${error}`,
-    };
-  } finally {
-    return response;
-  }
-};
-*/

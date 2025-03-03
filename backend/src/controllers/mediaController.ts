@@ -5,8 +5,8 @@ import cloudinary from "@/config/cloudinary";
 // errors
 import { RequestBodyError } from "@/utils/errors";
 // utils
-import { createMedia, deleteMedia } from "@/utils/models/media";
 import { checkForObjectKeys } from "@/utils/config/check";
+import { createMedia, deleteMedia } from "@/utils/models/media";
 import { generateThumbnails, trimVideo } from "@/utils/service/video";
 
 const { ObjectId } = Types;
@@ -166,9 +166,7 @@ export const trimVideoController = async (
       throw error;
     }
 
-    return res
-      .status(200)
-      .json({ data: `data:video/mp4;base64,${data}`, error, success });
+    return res.status(200).json({ data, error, success });
   } catch (error) {
     next(error);
   }

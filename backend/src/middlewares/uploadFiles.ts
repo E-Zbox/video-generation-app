@@ -16,7 +16,7 @@ const acceptedImageMimeTypes = [
 
 const maxFileSize = 15 * 1024 * 1024;
 
-const rootDir = "video-generation-app";
+export const rootUploadDir = "video-generation-app";
 
 export const uploadVideoBackgroundMedia = multer({
   fileFilter: (req, file, cb) => {
@@ -39,7 +39,7 @@ export const uploadVideoBackgroundMedia = multer({
     cloudinary,
     params: (req, file) => {
       return {
-        folder: `${rootDir}/video/background`,
+        folder: `${rootUploadDir}/video/background`,
         public_id: `${Date.now()}-${Math.round(Math.random() * 1e9)}`,
         resource_type: "auto",
       };
