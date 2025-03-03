@@ -88,6 +88,10 @@ export interface IScene {
   };
   time: number;
   sub_scenes: ISubScene[];
+  music: boolean;
+  tts: boolean;
+  subtitle: boolean;
+  subtitles: { text: string; time: number }[];
 }
 
 export interface IVoiceOverTrack {

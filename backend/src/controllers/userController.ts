@@ -213,7 +213,15 @@ export const generateDownloadableVideoController = async (
     // loop through and ensure each element in scenes is a valid scene
     scenes.every((scene: IScene) => {
       let errorMessage = checkForObjectKeys(
-        ["background", "sub_scenes", "time"],
+        [
+          "background",
+          "sub_scenes",
+          "time",
+          "music",
+          "tts",
+          "subtitle",
+          "subtitles",
+        ],
         scene
       );
 
@@ -307,6 +315,15 @@ export const generateDownloadableVideoController = async (
             }
           });
         });
+      });
+
+      // loop through subtitles and ensure all the fields are present
+      scene.subtitles.every((subtitle) => {
+        let errorMessage = checkForObjectKeys(["text", "time"], subtitle);
+
+        if (errorMessage) {
+          throw new RequestBodyError(errorMessage);
+        }
       });
     });
 
