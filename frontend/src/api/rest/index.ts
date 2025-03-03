@@ -17,6 +17,8 @@ instance.interceptors.response.use(
         "Please review your connection. If the problem persists, contact developer."
       );
     }
+    console.log("interceptors");
+    console.log(error);
     const { data } = error.response;
 
     if (data) {

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 // components
-import DarkOverlay from "../../shared/DarkOverlay";
+import DarkOverlay from "@/app/components/shared/DarkOverlay";
 // screens
 import { IVideoMeta } from "@/app/screens/interface";
 // store
@@ -17,7 +17,7 @@ import { CustomImage } from "@/app/styles/shared/Image.styles";
 import { screens } from "@/app/utils/data";
 import { extractImageFromVideo } from "@/app/utils/ffmpeg";
 import { timeFormatter } from "@/app/utils/transformer";
-import { SceneThumbnail } from "@/app/styles/Editor/Studio/Scene.styles";
+import { SceneThumbnail } from "@/app/styles/Editor/Studio/Scene/index.styles";
 
 interface IProps {
   index: number;
@@ -50,6 +50,7 @@ const Scene = (props: IProps) => {
   const [metadataState, setMetadataState] = useState<IVideoMeta>({
     duration: 0,
     name: "",
+    initialDuration: 0,
     videoHeight: 0,
     videoWidth: 0,
   });
@@ -66,15 +67,28 @@ const Scene = (props: IProps) => {
   const isVideo = src.type == "video";
   const path = src.url;
 
+  const trimmedBackgroundUrlKey = `${index}-${path}`;
+
   const handleLoadedMetaData = ({
     currentTarget,
   }: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    updateVideoMetadataState(path, {
-      name: path,
-      duration: currentTarget.duration,
-      videoHeight: currentTarget.videoHeight,
-      videoWidth: currentTarget.videoWidth,
-    });
+    if (videoMetadataState[path]) {
+      updateVideoMetadataState(path, {
+        ...videoMetadataState[path],
+        name: path,
+        duration: currentTarget.duration,
+        videoHeight: currentTarget.videoHeight,
+        videoWidth: currentTarget.videoWidth,
+      });
+    } else {
+      updateVideoMetadataState(path, {
+        name: path,
+        duration: currentTarget.duration,
+        initialDuration: currentTarget.duration,
+        videoHeight: currentTarget.videoHeight,
+        videoWidth: currentTarget.videoWidth,
+      });
+    }
   };
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -128,6 +142,7 @@ const Scene = (props: IProps) => {
         setMetadataState({
           duration: 0,
           name: "",
+          initialDuration: 0,
           videoHeight: 0,
           videoWidth: 0,
         });
@@ -146,8 +161,8 @@ const Scene = (props: IProps) => {
         {isVideo ? (
           <video
             src={
-              trimmedBackgroundVideoState[path]
-                ? trimmedBackgroundVideoState[path].video
+              trimmedBackgroundVideoState[trimmedBackgroundUrlKey]
+                ? trimmedBackgroundVideoState[trimmedBackgroundUrlKey].video
                 : path
             }
             onLoadedMetadata={handleLoadedMetaData}

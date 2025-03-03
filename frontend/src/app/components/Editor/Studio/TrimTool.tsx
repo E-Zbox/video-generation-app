@@ -1,7 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 // api
-import { trimVideo } from "@/api/rest/media";
+import { generateThumbnailsFromVideo, trimVideo } from "@/api/rest/media";
 // components
 import DarkOverlay from "../../shared/DarkOverlay";
 // store
@@ -24,7 +24,6 @@ import {
 import { CustomImage } from "@/app/styles/shared/Image.styles";
 // utils
 import { screens } from "@/app/utils/data";
-import { generateThumbnailsFromVideo } from "@/app/utils/ffmpeg";
 import { timeFormatter } from "@/app/utils/transformer";
 
 const TrimTool = () => {
@@ -90,16 +89,18 @@ const TrimTool = () => {
   const isVideo = src.type == "video";
   const path = src.url;
 
-  const duration = videoMetadataState[path]?.duration || 0;
+  const duration = videoMetadataState[path]?.initialDuration || 0;
+
+  const trimmedBackgroundUrlKey = `${selectedSceneIndex}-${path}`;
 
   const getThumbnails = async () => {
     if (ffmpegState) {
       setThumbnailIsProcessingState(true);
 
       const { data, error, success } = await generateThumbnailsFromVideo(
-        ffmpegState,
-        path,
-        duration
+        duration,
+        20,
+        path
       );
 
       // console.log({ data, error, success });
@@ -150,6 +151,8 @@ const TrimTool = () => {
         rightOffset: rightOffsetInPixelState,
         video: data,
       });
+
+      console.log(trimmedBackgroundVideoState);
     }
   };
 
@@ -345,8 +348,9 @@ const TrimTool = () => {
             ))}
             <TrimBox
               $left={`${
-                trimmedBackgroundVideoState[path]
-                  ? trimmedBackgroundVideoState[path].leftOffset
+                trimmedBackgroundVideoState[trimmedBackgroundUrlKey]
+                  ? trimmedBackgroundVideoState[trimmedBackgroundUrlKey]
+                      .leftOffset
                   : leftOffsetInPixelState
               }px`}
               $width={"20%"}
@@ -374,7 +378,7 @@ const TrimTool = () => {
       )}
       {videoTrimmingIsProcessingState ? (
         <DarkOverlay>
-          <CustomImage src={loaderTwoIcon.src} $size={"80px"} />
+          <CustomImage src={loaderTwoIcon.src} $size={"100px"} />
         </DarkOverlay>
       ) : (
         <></>

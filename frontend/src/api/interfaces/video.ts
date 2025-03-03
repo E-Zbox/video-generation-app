@@ -7,8 +7,11 @@ import { IGenericResponse } from ".";
 import { IThumbnail } from "@/app/screens/interface";
 
 export interface IGenerateVideoPayload {
+  brandLogoHorizontalAlignment: string;
+  brandLogoVerticalAlignment: string;
   brandLogoURL: string;
   minimumDuration: number;
+  speaker?: string;
   text: string;
   videoDescription: string;
   videoName: string;
@@ -52,8 +55,8 @@ export interface IBackgroundSrc {
   url: string;
   type: string;
   library: string;
-  loop_video: true;
-  mute: true;
+  loop_video: boolean;
+  mute: boolean;
 }
 
 export interface IAnimation {
@@ -66,7 +69,7 @@ export interface IAnimation {
 export interface ITextLine {
   text: string;
   text_animation: IAnimation[];
-  text_bg_animation: IAnimation;
+  text_bg_animation: IAnimation[];
 }
 
 export interface ISubScene {
@@ -81,18 +84,19 @@ export interface ISubScene {
 
 export interface IScene {
   background: {
-    src: IBackgroundSrc;
+    src: IBackgroundSrc[];
     color: string;
     bg_animation: {
       animation: string;
     };
-    time: number;
+    // time: number;
   };
   time: number;
   sub_scenes: ISubScene[];
 }
 
 export interface IVideoRender {
+  jobId: string;
   txtFile: string;
   audioURL: string;
   thumbnail: string;
@@ -101,7 +105,7 @@ export interface IVideoRender {
   vttFile: string;
   srtFile: string;
   shareVideoURL: string;
-  status: string;
+  status: "completed" | "in-progress";
 }
 
 export interface IVideoGenerationResponse

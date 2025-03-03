@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 // api
 import { IVoiceOverTrack } from "@/api/interfaces/voiceover";
 // store
-import { useEditorStore } from "@/app/store";
+import { useEditorStore, useStoryboardEditorStore } from "@/app/store";
 // styles
 import { VoiceOption } from "@/app/styles/Editor/Studio/VoiceOver.styles";
 import { CustomImage } from "@/app/styles/shared/Image.styles";
@@ -29,12 +29,12 @@ const VoiceOver = (props: IProps) => {
     pauseVoiceoverTrackState,
     playVoiceoverTrackState,
     selectVoiceoverTrackState,
+    selectedVoiceOverTrackState,
     voiceoverTrackState,
   } = useEditorStore();
+  const { voiceoverAudioRefState } = useStoryboardEditorStore();
 
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  const [isReadyState, setIsReadyState] = useState(false);
+  const [isReadyState, setIsReadyState] = useState(true);
 
   const voiceoverState = voiceoverTrackState[language][voiceoverId];
 
@@ -43,30 +43,55 @@ const VoiceOver = (props: IProps) => {
   };
 
   const handleClick = (e: React.MouseEvent<HTMLHeadingElement, MouseEvent>) => {
+    e.stopPropagation();
     if (isReadyState) {
       selectVoiceoverTrackState(language, voiceoverId);
     }
   };
 
-  useEffect(() => {
-    if (audioRef.current) {
-      if (voiceoverState.playing) {
-        audioRef.current.play();
-      } else {
-        audioRef.current.pause();
-      }
+  const handlePlay = (e: React.MouseEvent<HTMLImageElement, MouseEvent>) => {
+    e.stopPropagation();
+    if (voiceoverAudioRefState) {
+      // check if voiceoverAudioRef is already loading an audio
+      voiceoverAudioRefState.load();
+      voiceoverAudioRefState.src = sample;
+      playVoiceoverTrackState(language, voiceoverId);
     }
-  }, [voiceoverState]);
+  };
 
   useEffect(() => {
-    if (audioRef.current) {
+    if (
+      voiceoverAudioRefState &&
+      selectedVoiceOverTrackState.language == language &&
+      selectedVoiceOverTrackState.id == voiceoverId
+    ) {
+      // check if audio of previously selected audio is still loading
+
+      if (voiceoverState.playing) {
+        voiceoverAudioRefState.play();
+      } else {
+        voiceoverAudioRefState.pause();
+      }
+    }
+  }, [selectedVoiceOverTrackState, voiceoverState]);
+
+  useEffect(() => {
+    if (
+      selectedVoiceOverTrackState.language == language &&
+      voiceoverAudioRefState &&
+      selectedVoiceOverTrackState.id == voiceoverId
+    ) {
       const endedEventListener = (e: Event) => {
         pauseVoiceoverTrackState(language, voiceoverId);
       };
 
-      audioRef.current.addEventListener("ended", endedEventListener);
+      voiceoverAudioRefState.addEventListener("ended", endedEventListener);
+
+      return () => {
+        voiceoverAudioRefState.removeEventListener("ended", endedEventListener);
+      };
     }
-  }, [audioRef]);
+  }, [selectedVoiceOverTrackState, voiceoverAudioRefState]);
 
   return (
     <VoiceOption
@@ -74,23 +99,12 @@ const VoiceOver = (props: IProps) => {
       $selected={voiceoverState.selected}
       onClick={handleClick}
     >
-      <audio
-        src={sample}
-        ref={audioRef}
-        onLoad={handleLoadedMetadata}
-        onLoadedMetadata={handleLoadedMetadata}
-      />
       <div>
         {isReadyState ? (
           <CustomImage
             src={voiceoverState.playing ? bluePauseIcon.src : bluePlayIcon.src}
             $size="14px"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isReadyState) {
-                playVoiceoverTrackState(language, voiceoverId);
-              }
-            }}
+            onClick={handlePlay}
           />
         ) : (
           <CustomImage src={loaderTwoIcon.src} $size="32px" />

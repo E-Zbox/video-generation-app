@@ -2,7 +2,7 @@ import { instance } from ".";
 import { INumberResponse } from "../interfaces";
 // interfaces>
 import { ICreateMediaPayload, IMediaResponse } from "../interfaces/media";
-import { IStringResponse } from "../interfaces/video";
+import { IStringResponse, IThumbnailsResponse } from "../interfaces/video";
 
 export const uploadMedia = async (
   payload: ICreateMediaPayload
@@ -73,6 +73,42 @@ export const deleteMedia = async (
 
   try {
     const result = await instance.delete(`/video/background/delete/${mediaId}`);
+
+    const { data } = result;
+
+    response = {
+      ...data,
+    };
+  } catch (error) {
+    response = {
+      ...response,
+      error: `${error}`,
+    };
+  } finally {
+    return response;
+  }
+};
+
+export const generateThumbnailsFromVideo = async (
+  duration: number,
+  maxThumbnails: number,
+  videoUrl: string
+): Promise<IThumbnailsResponse> => {
+  let response: IThumbnailsResponse = {
+    data: [],
+    error: "",
+    success: false,
+  };
+
+  try {
+    const result = await instance.post(
+      "/video/background/generate-thumbnails",
+      {
+        duration,
+        maxThumbnails,
+        videoUrl,
+      }
+    );
 
     const { data } = result;
 

@@ -7,19 +7,21 @@ import {
   IVideoGeneration,
   IVideoGenerationResponse,
 } from "@/api/interfaces/video";
-import { expandText, generateVideo } from "@/api/rest/ai-generation";
+import {
+  expandText,
+  generateVideo,
+  monitorVideoStatus,
+} from "@/api/rest/ai-generation";
 import { emitEvents, onEvents } from "@/api/socket";
 // components
 import AIGeneratedCard from "../components/AIGeneratedCard";
 import TextInput from "../components/TextInput";
-import VideoControl from "../components/VideoControl";
 // store
 import {
   useAppStore,
   useEditorStore,
   useStoryboardEditorStore,
 } from "../store";
-import testVideo from "../store/test-video";
 // styles
 import {
   Form,
@@ -36,16 +38,12 @@ import {
   TabText,
   MainAIGenerated,
   AIGeneratedScroller,
-  MainVideo,
-  VideoControls,
-  ProgressBar,
-  MainTimer,
 } from "../styles/VideoGenerationScreen.styles";
 import { DivContainer } from "../styles/shared/Container.styles";
 import { CustomImage } from "../styles/shared/Image.styles";
 // utils
 import { screens, theme } from "../utils/data";
-import { timeFormatter } from "../utils/transformer";
+import { StatusButton } from "../styles/Editor/MediaTray/AIGeneratedVideo.styles";
 
 interface IAIGeneratedText {
   loading: boolean;
@@ -66,39 +64,26 @@ interface IGeneratedVideo {
 const VideoGenerationScreen = () => {
   const {
     default: {
-      assets: { loaderIcon },
+      assets: { loaderIcon, loaderThreeIcon },
     },
     videoGeneration: {
-      assets: {
-        aiIcon,
-        videoJS: {
-          fullscreenEnter,
-          fullscreenExit,
-          pause,
-          play,
-          volumeHigh,
-          volumeMute,
-        },
-      },
-      data: { aiGeneration, videoSrc },
+      assets: { aiIcon },
     },
   } = screens;
 
   const {
+    setBrandLogoURLState,
     editMessageInMessageState,
-    ffmpegState,
     updateMessageState,
+    setMinimumVideoDurationState,
     navbarHeightState,
     socketState,
   } = useAppStore();
   const { setAiGeneratedScenes } = useEditorStore();
   const { sceneState, setStoryboardState } = useStoryboardEditorStore();
 
-  const audioRef = useRef<HTMLAudioElement>(null);
   const expandTextScrollerRef = useRef<HTMLDivElement>(null);
-  const progressBarRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const router = useRouter();
 
@@ -107,7 +92,6 @@ const VideoGenerationScreen = () => {
       loading: false,
       value: [],
     });
-  const [audioMutedState, setAudioMutedState] = useState(false);
   const [formState, setFormState] = useState({
     input_brand_logo_url: "",
     input_minimum_duration: "",
@@ -115,10 +99,13 @@ const VideoGenerationScreen = () => {
     input_video_description: "",
     input_video_name: "",
   });
+  const [jobIdState, setJobIdState] = useState("");
+  const [showStatusButtonState, setShowStatusButtonState] = useState(false);
   const [hideTextLabelState, setHideTextLabelState] = useState(false);
   const [redirectMessageIdState, setRedirectMessageIdState] = useState("");
   const [redirectTimerState, setRedirectTimerState] = useState(5);
   const [selectedTabMenuState, setSelectedTabMenuState] = useState(0);
+  const [statusLoadingState, setStatusLoadingState] = useState(false);
   const [tabMenuState, setTabMenuState] = useState([
     {
       id: 1,
@@ -132,12 +119,6 @@ const VideoGenerationScreen = () => {
     },
   ]);
   const [triggerTimerState, setTriggerTimerState] = useState(false);
-  const [videoCurrentTimeState, setVideoCurrentTimeState] = useState(0);
-  const [videoDurationState, setVideoDurationState] = useState(0);
-  const [videoFullscreenState, setVideoFullscreenState] = useState(false);
-  const [videoIsPlayingState, setVideoIsPlayingState] = useState(false);
-  const [videoMouseOverState, setVideoMouseOverState] = useState(false);
-  const [videoPlayIdState, setVideoPlayIdState] = useState(0);
   const [videoState, setVideoState] = useState<IGeneratedVideo>({
     loading: false,
     value: {
@@ -145,7 +126,6 @@ const VideoGenerationScreen = () => {
       videos: [],
     },
   });
-  const [videoWatchedTimeState, setVideoWatchedTimeState] = useState(0);
 
   const { purple01, purple02 } = theme;
 
@@ -217,6 +197,11 @@ const VideoGenerationScreen = () => {
     const { data, error, success } = await expandText(text);
 
     if (!success) {
+      setAIGeneratedTextState((prevState) => ({
+        loading: false,
+        value: prevState.value,
+      }));
+
       updateMessageState({ message: error, success: false });
       return;
     }
@@ -288,6 +273,8 @@ const VideoGenerationScreen = () => {
     setVideoState((prevState) => ({ ...prevState, loading: true }));
 
     const { data, error, success } = await generateVideo({
+      brandLogoHorizontalAlignment: "right",
+      brandLogoVerticalAlignment: "top",
       brandLogoURL,
       minimumDuration: Number(minimumDuration),
       text,
@@ -297,56 +284,66 @@ const VideoGenerationScreen = () => {
 
     if (!success) {
       updateMessageState({ message: error, success });
-      setVideoState((prevState) => ({ ...prevState, loading: false }));
       return;
     }
+
+    setMinimumVideoDurationState(Number(minimumDuration));
+
+    setBrandLogoURLState(brandLogoURL);
 
     socketState.emit(join_video_generation_room, { jobId: data });
   };
 
-  const toggleFullScreen = async () => {
-    /*
-    const videoElement = videoRef.current;
+  const handleStatusButton = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    e.preventDefault();
 
-    if (videoElement) {
-      if (!document.fullscreenElement) {
-        await videoElement.requestFullscreen();
-      } else {
-        await document.exitFullscreen()
-      }
+    setStatusLoadingState(true);
+
+    const { data, error, success } = await monitorVideoStatus(jobIdState);
+
+    setStatusLoadingState(false);
+
+    if (!success) {
+      updateMessageState({ message: error, success });
+      return;
     }
-    */
-    setVideoFullscreenState((prevState) => !prevState);
-  };
 
-  const toggleAudio = () => {
-    setAudioMutedState((prevState) => !prevState);
-  };
-
-  const togglePlay = async () => {
-    const videoElement = videoRef.current;
-
-    if (videoElement) {
-      if (videoIsPlayingState) {
-        videoElement.pause();
-      } else {
-        await videoElement.play();
-      }
+    if (data.status == "in-progress") {
+      updateMessageState({ message: "Your video is processing!", success });
+      return;
     }
-  };
 
-  useEffect(() => {
-    const { audio, output, scenes } = testVideo.data.renderParams;
+    const { audio, output, scenes } = data.renderParams;
+
     setStoryboardState({
       audioState: audio,
+      cachedSSMLTagState: null,
+      detectedChangeInTextLine: false,
+      editTagToolActivatedState: false,
       loadingState: false,
       outputState: output,
       sceneState: scenes,
       selectedSceneIndex: null,
+      selectedTextLineTagState: null,
+      textEditorActivatedState: false,
       trimActivatedState: false,
-      trimmedBackgroundState: {},
+      trimmedBackgroundVideoState: {},
+      trimmedThumbnailState: {},
     });
-  }, []);
+
+    // update a particular state that will trigger render video element
+    setVideoState({
+      loading: false,
+      value: {
+        audio: data.renderParams.audio.tts!,
+        videos: (data as IVideoGeneration).renderParams.scenes.map(
+          ({ background: { src }, time }) => ({ src: src[0].url, time })
+        ),
+      },
+    });
+  };
 
   useEffect(() => {
     if (hideTextLabelState) {
@@ -383,262 +380,103 @@ const VideoGenerationScreen = () => {
   }, [selectedTabMenuState]);
 
   useEffect(() => {
-    socketState.on("connect", () => {
-      socketState.on(
+    // socketState.on("connect", () => {
+    const onJoinVideoGenerationRoomSuccessListener = (
+      payload: IStringResponse
+    ) => {
+      const { data, error, success } = payload;
+
+      // setVideoState((prevState) => ({ ...prevState, loading: true }));
+
+      if (!success) {
+        updateMessageState({ message: error, success: false });
+        return;
+      }
+
+      setJobIdState(data);
+
+      setShowStatusButtonState(true);
+
+      // your video is processing
+      updateMessageState({
+        message: "Your video is processing!",
+        success: true,
+      });
+    };
+
+    socketState.on(
+      join_video_generation_room_success,
+      onJoinVideoGenerationRoomSuccessListener
+    );
+
+    const onVideoGenerationSuccessListener = (
+      payload: IVideoGenerationResponse
+    ) => {
+      const { data, error, success } = payload;
+
+      if (!success) {
+        setVideoState((prevState) => ({ ...prevState, loading: false }));
+
+        updateMessageState({ message: error, success: false });
+        return;
+      }
+
+      const { audio, output, scenes } = data.renderParams;
+
+      setStoryboardState({
+        audioState: audio,
+        cachedSSMLTagState: null,
+        detectedChangeInTextLine: false,
+        editTagToolActivatedState: false,
+        loadingState: false,
+        outputState: output,
+        sceneState: scenes,
+        selectedSceneIndex: null,
+        selectedTextLineTagState: null,
+        textEditorActivatedState: false,
+        trimActivatedState: false,
+        trimmedBackgroundVideoState: {},
+        trimmedThumbnailState: {},
+      });
+
+      // update a particular state that will trigger render video element
+      setVideoState({
+        loading: false,
+        value: {
+          audio: data.renderParams.audio.tts!,
+          videos: data.renderParams.scenes.map(
+            ({ background: { src }, time }) => ({ src: src[0].url, time })
+          ),
+        },
+      });
+    };
+
+    socketState.on(video_generation_success, onVideoGenerationSuccessListener);
+    // });
+
+    return () => {
+      socketState.off(
         join_video_generation_room_success,
-        (payload: IStringResponse) => {
-          const { data, error, success } = payload;
-
-          if (!success) {
-            updateMessageState({ message: error, success: false });
-            return;
-          }
-
-          // your video is processing
-          updateMessageState({
-            message: "Your video is processing!",
-            success: true,
-          });
-        }
+        onJoinVideoGenerationRoomSuccessListener
       );
 
-      socketState.on(
+      socketState.off(
         video_generation_success,
-        (payload: IVideoGenerationResponse) => {
-          const { data, error, success } = payload;
-
-          if (!success) {
-            updateMessageState({ message: error, success: false });
-            return;
-          }
-
-          const { audio, output, scenes } = data.renderParams;
-
-          setStoryboardState({
-            audioState: audio,
-            loadingState: false,
-            outputState: output,
-            sceneState: scenes,
-            selectedSceneIndex: null,
-            trimActivatedState: false,
-            trimmedBackgroundState: {},
-          });
-
-          // update a particular state that will trigger render video element
-          setVideoState({
-            loading: false,
-            value: {
-              audio: data.renderParams.audio.tts!,
-              videos: data.renderParams.scenes.map(
-                ({ background: { src }, time }) => ({ src: src[0].url, time })
-              ),
-            },
-          });
-        }
+        onVideoGenerationSuccessListener
       );
-    });
+    };
   }, [socketState]);
 
   useEffect(() => {
-    if (audioRef.current && videoRef.current && videoDurationState > 0) {
-      const audioElement = audioRef.current;
-      const videoElement = videoRef.current;
-
-      // audioElement.addEventListener("volumechange", () => {
-      //   if (!audioElement.muted) {
-      //     videoElement.volume = audioElement.volume;
-      //   }
-      // });
-
-      const handleEndedEvent = (e: Event) => {
-        if (
-          videoPlayIdState <= videoState.value.videos.length - 1 &&
-          Math.floor(videoCurrentTimeState) <= Math.floor(videoDurationState)
-        ) {
-          setVideoWatchedTimeState(
-            (prevState) => prevState + videoElement.duration
-          );
-          setVideoPlayIdState((prevState) => prevState + 1);
-        }
-      };
-
-      videoElement.addEventListener("ended", handleEndedEvent);
-
-      const handleFullscreenChangeEvent = (e: Event) => {
-        if (!document.fullscreenElement) {
-          setVideoFullscreenState(false);
-
-          videoRef.current?.scrollIntoView();
-        } else {
-          setVideoFullscreenState(true);
-        }
-      };
-
-      videoElement.addEventListener(
-        "fullscreenchange",
-        handleFullscreenChangeEvent
-      );
-
-      const handleLoadstartEvent = (e: Event) => {
-        if (videoElement.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) {
-          // console.log("video is loading");
-          // audioElement.pause();
-        }
-      };
-
-      videoElement.addEventListener("loadstart", handleLoadstartEvent);
-
-      const handleLoadeddataEvent = async (e: Event) => {
-        if (videoElement.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA) {
-          // console.log("video is done loading!");
-
-          if (videoIsPlayingState) {
-            await audioElement.play();
-            await videoElement.play();
-          }
-        }
-      };
-
-      videoElement.addEventListener("loadeddata", handleLoadeddataEvent);
-
-      const handlePauseEvent = (e: Event) => {
-        audioElement.pause();
-        setVideoIsPlayingState(false);
-      };
-
-      videoElement.addEventListener("pause", handlePauseEvent);
-
-      const handlePlayEvent = async (e: Event) => {
-        audioElement.play();
-        setVideoIsPlayingState(true);
-      };
-
-      videoElement.addEventListener("play", handlePlayEvent);
-
-      const handleTimeupdateEvent = () => {
-        const currentTime = videoElement.currentTime;
-
-        setVideoCurrentTimeState(videoWatchedTimeState + currentTime);
-      };
-
-      videoElement.addEventListener("timeupdate", handleTimeupdateEvent);
-
-      const handleVolumechangeEVent = () => {
-        if (videoElement.muted) {
-          setAudioMutedState(videoElement.muted);
-        } else {
-          // adjust volume accordingly
-          const volume = videoElement.volume;
-
-          audioElement.volume = volume;
-
-          setAudioMutedState(false);
-        }
-      };
-      videoElement.addEventListener("volumechange", handleVolumechangeEVent);
-
-      // stop video when it has gotten to end of audio
-      if (Math.floor(videoCurrentTimeState) >= Math.floor(videoDurationState)) {
-        videoElement.pause();
-        setVideoWatchedTimeState(0);
-        setVideoPlayIdState(0);
-        videoElement.currentTime = 0;
-      }
-
-      return () => {
-        videoElement.removeEventListener("ended", handleEndedEvent);
-        videoElement.removeEventListener(
-          "fullscreenchange",
-          handleFullscreenChangeEvent
-        );
-        videoElement.removeEventListener("loadstart", handleLoadstartEvent);
-        videoElement.removeEventListener("pause", handlePauseEvent);
-        videoElement.removeEventListener("play", handlePlayEvent);
-        videoElement.removeEventListener("timeupdate", handleTimeupdateEvent);
-        videoElement.removeEventListener(
-          "volumechange",
-          handleVolumechangeEVent
-        );
-      };
-    }
-  }, [
-    audioRef,
-    videoCurrentTimeState,
-    videoDurationState,
-    videoRef,
-    videoWatchedTimeState,
-  ]);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.src = videoState.value.videos[videoPlayIdState].src;
-
-      // we don't want to start playing the video when the screen just loads
-      if (videoPlayIdState) {
-        videoRef.current?.play().then(() => {});
-        audioRef.current?.play();
-      }
-
-      // let's preload some video resource in background
-      for (
-        let index = videoPlayIdState + 1;
-        index <= videoPlayIdState + 2;
-        index++
-      ) {
-        if (videoState.value.videos[index]) {
-          const video = document.createElement("video");
-          video.preload = "auto";
-          video.src = videoState.value.videos[index].src;
-        } else {
-          break;
-        }
-      }
-    }
-  }, [videoPlayIdState]);
-
-  useEffect(() => {
-    if (videoFullscreenState) {
-      videoRef.current?.requestFullscreen();
-    } else if (document.fullscreenElement) {
-      document.exitFullscreen();
-    }
-  }, [videoFullscreenState]);
-
-  useEffect(() => {
-    const audioElement = audioRef.current;
-    const videoElement = videoRef.current;
-
-    if (audioElement) {
-      audioElement.muted = audioMutedState;
-
-      if (videoElement) {
-        // videoElement.muted = audioMutedState;
-      }
-    }
-  }, [audioMutedState]);
-
-  useEffect(() => {
     if (videoState.value.videos.length > 0) {
-      // console.log({ videoPlayIdState });
-      // console.log(videoState.value.videos[videoPlayIdState].src);
-      // console.log(videoState.value.videos);
-      let totalDuration = 0;
+      // let's trigger navigating to /editor page
+      setTriggerTimerState(true);
+    }
 
-      videoState.value.videos.forEach(({ time }) => {
-        totalDuration += time;
-      });
-
-      setVideoDurationState(totalDuration);
+    if (!videoState.loading) {
+      setShowStatusButtonState(false);
     }
   }, [videoState]);
-
-  useEffect(() => {
-    const progressBarWidth = (videoCurrentTimeState / videoDurationState) * 100;
-
-    if (progressBarRef.current) {
-      progressBarRef.current.style.width = `${progressBarWidth}%`;
-    }
-  }, [videoCurrentTimeState]);
 
   useEffect(() => {
     if (triggerTimerState) {
@@ -675,9 +513,6 @@ const VideoGenerationScreen = () => {
 
   useEffect(() => {
     if (sceneState.length > 0) {
-      // let's trigger navigating to /editor page
-      setTriggerTimerState(true);
-
       setAiGeneratedScenes(
         sceneState.map((scene) => scene.background.src[0].url)
       );
@@ -819,8 +654,8 @@ const VideoGenerationScreen = () => {
               />
               {videoState.loading ? (
                 <DivContainer
-                  $height="100px"
-                  $justifyContent="center"
+                  $height="150px"
+                  $justifyContent="space-around"
                   $width="100%"
                 >
                   <CustomImage
@@ -828,67 +663,32 @@ const VideoGenerationScreen = () => {
                     alt="loader-icon"
                     $size={"50px"}
                   />
+                  {showStatusButtonState ? (
+                    statusLoadingState ? (
+                      <CustomImage src={loaderThreeIcon.src} $size={"32px"} />
+                    ) : (
+                      <StatusButton onClick={handleStatusButton}>
+                        Status
+                      </StatusButton>
+                    )
+                  ) : (
+                    <></>
+                  )}
                 </DivContainer>
               ) : (
-                <FormButton
-                  disabled={disableGenerateButton}
-                  onClick={handleGenerateVideoSubmit}
-                >
-                  Generate Video
-                  <CustomImage src={aiIcon.src} alt="ai-icon" $size="32px" />
-                </FormButton>
+                <>
+                  <FormButton
+                    disabled={disableGenerateButton}
+                    onClick={handleGenerateVideoSubmit}
+                  >
+                    Generate Video
+                    <CustomImage src={aiIcon.src} alt="ai-icon" $size="32px" />
+                  </FormButton>
+                </>
               )}
             </DivContainer>
           </Form>
-          <FormButton
-            disabled={ffmpegState == null}
-            onClick={() => setTriggerTimerState(true)}
-          >
-            /Editor
-          </FormButton>
         </MainForm>
-        {videoState.loading ? (
-          <DivContainer $justifyContent="center" $height="200px"></DivContainer>
-        ) : videoState.value.videos.length == 0 ? (
-          <></>
-        ) : (
-          <MainVideo
-            onMouseOut={() => setVideoMouseOverState(false)}
-            onMouseOver={() => setVideoMouseOverState(true)}
-          >
-            <video ref={videoRef} onClick={togglePlay} muted={false}>
-              <source
-                src={videoState.value.videos[videoPlayIdState].src}
-                type="video/mp4"
-              ></source>
-            </video>
-            <audio ref={audioRef} controls>
-              <source src={videoState.value.audio} type="audio/mpeg"></source>
-            </audio>
-            <VideoControls $show={videoMouseOverState}>
-              <VideoControl
-                icon={videoIsPlayingState ? pause : play}
-                handleClick={togglePlay}
-              />
-              <MainTimer>
-                <p>{timeFormatter(videoCurrentTimeState)}</p>
-                <p>/</p>
-                <p>{timeFormatter(videoDurationState)}</p>
-              </MainTimer>
-              <ProgressBar>
-                <div ref={progressBarRef}></div>
-              </ProgressBar>
-              <VideoControl
-                icon={audioMutedState ? volumeMute : volumeHigh}
-                handleClick={toggleAudio}
-              />
-              <VideoControl
-                icon={videoFullscreenState ? fullscreenExit : fullscreenEnter}
-                handleClick={toggleFullScreen}
-              />
-            </VideoControls>
-          </MainVideo>
-        )}
       </DivContainer>
     </MainVideoGeneration>
   );

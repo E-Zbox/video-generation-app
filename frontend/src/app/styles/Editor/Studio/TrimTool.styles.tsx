@@ -16,10 +16,7 @@ export const MainTrimTool = styled.main`
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-
-  h4 {
-    font-size: 3rem;
-  }
+  position: relative;
 `;
 
 export const TrimScroller = styled.div`

@@ -18,7 +18,7 @@ export const VoiceOption = styled.h4<IVoiceOption>`
     letter-spacing: 1px;
     margin-bottom: 1px;
     cursor: pointer;
-    background-color: ${blue04}92;
+    background-color: ${blue04}42;
     padding: calc(var(--seven-px) * 1.4) calc(var(--seven-px) * 2);
     padding-right: calc(var(--ten-px) * 2);
 
@@ -48,10 +48,6 @@ export const VoiceOption = styled.h4<IVoiceOption>`
         &:active {
             scale: 0.98;
         }`
-    }
-
-    audio {
-        display: none;
     }
 
     div {

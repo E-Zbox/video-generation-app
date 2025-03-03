@@ -18,7 +18,7 @@ interface IProps {
   path: string;
 }
 
-const AIGeneratedMedia = (props: IProps) => {
+const AIGeneratedScene = (props: IProps) => {
   const { index, path } = props;
 
   const {
@@ -40,6 +40,7 @@ const AIGeneratedMedia = (props: IProps) => {
   const [metadataState, setMetadataState] = useState<IVideoMeta>({
     duration: 0,
     name: "",
+    initialDuration: 0,
     videoHeight: 0,
     videoWidth: 0,
   });
@@ -89,7 +90,7 @@ const AIGeneratedMedia = (props: IProps) => {
           <CustomImage src={loaderTwoIcon.src} $size={"80px"} />
         </DarkOverlay>
       ) : metadataState.duration ? (
-        <span>{timeFormatter(metadataState.duration)}</span>
+        <span>{timeFormatter(metadataState.initialDuration)}</span>
       ) : (
         <></>
       )}
@@ -97,4 +98,4 @@ const AIGeneratedMedia = (props: IProps) => {
   );
 };
 
-export default AIGeneratedMedia;
+export default AIGeneratedScene;

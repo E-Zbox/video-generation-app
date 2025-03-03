@@ -4,6 +4,10 @@ interface ISettingsButton {
   $selected?: boolean;
 }
 
+interface ILogoInput {
+  $loadFailed: boolean;
+}
+
 interface ISelect {
   $selected: boolean;
 }
@@ -42,6 +46,7 @@ export const VideoStudio = styled.main`
 export const SettingsTray = styled.div`
   height: 60px;
   width: fit-content;
+  max-width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -51,10 +56,12 @@ export const SettingsTray = styled.div`
   border: none;
   outline: none;
   appearance: none;
+  overflow-x: scroll;
   background-color: #ffffff13;
 
-  & > * {
-    margin: 0px calc(var(--seven-px));
+  & > div > * {
+    white-space: nowrap;
+    margin: 0px calc(var(--three-px) * 2);
   }
 `;
 
@@ -64,6 +71,7 @@ export const SettingsButton = styled.button<ISettingsButton>`
   outline: none;
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
   font-family: Nunito;
@@ -135,40 +143,30 @@ export const MainLogo = styled.div`
   justify-content: flex-start;
   height: 100%;
   width: fit-content;
-  position: relative;
+  // position: relative;
 `;
 
-export const LogoInput = styled.input`
-  ${({ theme: { blue03 } }) => `
-  left: 0px;
-  top: calc(100% + 15px);
+export const LogoInput = styled.input<ILogoInput>`
+  ${({ $loadFailed }) => `
   position: absolute;
   height: 50px;
   width: 250px;
   font-size: 1rem;
   font-family: Poppins;
   font-weight: 400;
-  border: 0px;
   outline: 0px;
-  color: #ddd;
+  color: black;
   z-index: 2;
   border-radius: 5px;
   padding: 0px var(--ten-px);
-  background-color: ${blue03};
+  background-color: white;
+  border: ${$loadFailed ? `2px solid red` : "0px solid transparent"};
   box-shadow: 1px 1px 3px #0003 inset;
 
   &:focus {
     box-shadow: 1px 1px 3px 1px #000c inset;
   }
   `}
-`;
-
-export const MainSelect = styled.div`
-  display: grid;
-  place-content: center;
-  height: fit-content;
-  width: fit-content;
-  position: relative;
 `;
 
 export const Select = styled.div<ISelect>`
@@ -215,25 +213,67 @@ export const Select = styled.div<ISelect>`
     background-color: #7772;
   }
 
+  audio {
+      display: none;
+  }
+
   &:active {
     scale: 0.98;
   }
   `}
 `;
 
-export const MainOption = styled.div`
-  left: 0px;
-  top: calc(100% + 15px);
-  height: 300px;
-  width: 200px;
+export const MainVoiceOver = styled.main`
+  ${({ theme: { blue03 } }) => `
+  right: 20px;
+  top: 50%;
+  height: 400px;
+  width: 300px;
   position: absolute;
-  //   width: fit-content;
-  position: absolute;
-  overflow-x: scroll;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  // border: 1px solid green;
   border-radius: 5px;
-  z-index: 2;
-  background-color: #ffffff31;
   box-shadow: 0px 1px 4px #ddd2;
+  transform: translate(0px, -50%);
+  background-color: ${blue03}28;
+  `}
+`;
+
+export const VoiceOverTitle = styled.div`
+  ${({ theme: { blue01, blue03 } }) => `
+  width: 100%;
+  padding: var(--ten-px);
+  position: relative;
+  box-shadow: 0px 1px 4px #cdcdcd16;
+
+  h4 {
+    z-index: 1;
+    color: ${blue01};
+    font-family: Nunito;
+    font-size: 1.2rem;
+    position: sticky;
+  }
+
+  &::before {
+    content: "";
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 100%;
+    z-index: 0;
+    position: absolute;
+    background-color: #0e0e0e89;
+  }
+  `}
+`;
+
+export const VoiceOverScroller = styled.div`
+  height: 100%;
+  width: 100%;
+  overflow-y: scroll;
 `;
 
 export const OptionHeader = styled.h4`
@@ -242,7 +282,7 @@ export const OptionHeader = styled.h4`
   font-size: 0.9rem;
   font-weight: 600;
   width: 100%;
-  background-color: #0003;
+  background-color: #02020240;
   padding: var(--seven-px) calc(var(--seven-px) * 2);
 `;
 
@@ -259,7 +299,7 @@ export const Option = styled.h4`
     letter-spacing: 1px;
     margin-bottom: 1px;
     cursor: pointer;
-    background-color: ${blue04}42;
+    background-color: ${blue04}02;
     padding: calc(var(--seven-px) * 2);
 
     div {
@@ -310,7 +350,7 @@ export const ReplaceButton = styled.button`
     border-radius: 5px;
     opacity: 0.8;
     background-color: #fefefe;
-    padding: calc(var(--seven-px) * 2) calc(var(--ten-px) * 2);
+    padding: calc(var(--seven-px) * 1.3) calc(var(--ten-px) * 1.4);
 
     &:hover {
       opacity: 1;
@@ -320,6 +360,38 @@ export const ReplaceButton = styled.button`
       scale: 0.95;
     }
   `}
+`;
+
+export const PictoryButton = styled.button`
+  border: 0px;
+  color: #ddd;
+  outline: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-family: Nunito;
+  font-size: 1rem;
+  font-weight: bolder;
+  border-radius: 5px;
+  scale: 0.95;
+  transition: 350ms ease-in;
+  padding: calc(var(--seven-px) * 1) calc(var(--ten-px) * 1);
+  ${({ theme: { purple01, purple02 } }) => `
+    background-image: linear-gradient(to right, ${purple01}, ${purple02});;
+  `}
+
+  img {
+    margin-left: var(--seven-px);
+  }
+
+  &:hover {
+    scale: 1;
+  }
+
+  &:active {
+    scale: 0.95;
+  }
 `;
 
 export const MainScene = styled.main`

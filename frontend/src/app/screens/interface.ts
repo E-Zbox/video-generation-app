@@ -6,6 +6,7 @@ export interface IThumbnail {
 export interface IVideoMeta {
   name: string;
   duration: number;
+  initialDuration: number;
   videoWidth: number;
   videoHeight: number;
 }

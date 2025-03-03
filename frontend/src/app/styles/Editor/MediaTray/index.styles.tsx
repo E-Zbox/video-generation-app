@@ -6,6 +6,7 @@ interface IMainMediaTray {
 
 interface ITrayTab {
   $left: string;
+  $width: string;
 }
 
 interface ITrayTitle {
@@ -36,18 +37,21 @@ export const MainMediaTray = styled.main<IMainMediaTray>`
     background-color: ${blue05};
 
     ${$show
-      ? `
-        width: 300px;
-        max-width: 100%;
-    `
-      : `
-        animation: ${shrinkWidth} 1300ms linear forwards;
-    `}
+      ? css`
+          width: 300px;
+          max-width: 100%;
+          visibility: visible;
+        `
+      : css`
+          width: 0px;
+          visibility: hidden;
+          // animation: ${shrinkWidth} 1300ms linear forwards;
+        `}
   `}
 `;
 
 export const TrayTab = styled.div<ITrayTab>`
-  ${({ $left, theme: { brown01 } }) => `
+  ${({ $left, $width, theme: { brown01 } }) => `
         width: 100%;
         height: 70px;
         display: flex;
@@ -66,7 +70,7 @@ export const TrayTab = styled.div<ITrayTab>`
             bottom: 0px;
             left: ${$left};
             height: 2px;
-            width: 49%;
+            width: ${$width};
             position: absolute;
             transition: 250ms ease-in;
             background-color: ${brown01};

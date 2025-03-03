@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+// components
+import TextEditor from "./TextEditor";
 // store
 import { useStoryboardEditorStore } from "@/app/store";
 // styles
@@ -20,8 +22,12 @@ const MediaEditor = () => {
     },
   } = screens;
 
-  const { selectedSceneIndex, sceneState, trimmedBackgroundVideoState } =
-    useStoryboardEditorStore();
+  const {
+    textEditorActivatedState,
+    selectedSceneIndex,
+    sceneState,
+    trimmedBackgroundVideoState,
+  } = useStoryboardEditorStore();
 
   if (selectedSceneIndex == null) {
     return <MainMediaEditor></MainMediaEditor>;
@@ -42,7 +48,9 @@ const MediaEditor = () => {
   } = scene;
 
   const isVideo = src.type;
-  const path = trimmedBackgroundVideoState[src.url]?.video || src.url;
+  const path =
+    trimmedBackgroundVideoState[`${selectedSceneIndex}-${src.url}`]?.video ||
+    src.url;
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     if (videoRef.current) {
@@ -81,7 +89,9 @@ const MediaEditor = () => {
 
   return (
     <MainMediaEditor>
-      {isVideo ? (
+      {textEditorActivatedState ? (
+        <TextEditor />
+      ) : isVideo ? (
         <>
           <PlayButton
             $icon={videoIsPlayingState ? pause : play}

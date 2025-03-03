@@ -2,16 +2,21 @@ import checkIcon from "../../../../public/icons8-check-48.png";
 import copyIcon from "../../../../public/icons8-copy-24.png";
 import loaderIcon from "../../../../public/loader.gif";
 import loaderTwoIcon from "../../../../public/loader-2.gif";
+import loaderThreeIcon from "../../../../public/loader-3.gif";
 // screens
 import modal from "./modal";
+import subScene from "./sub-scene";
 import videoEditor from "./video-editor";
 import videoGeneration from "./video-generation";
 
 export const devices = {};
 
 export const screens = {
-  default: { assets: { checkIcon, copyIcon, loaderIcon, loaderTwoIcon } },
+  default: {
+    assets: { checkIcon, copyIcon, loaderIcon, loaderThreeIcon, loaderTwoIcon },
+  },
   modal,
+  subScene,
   videoEditor,
   videoGeneration,
 };

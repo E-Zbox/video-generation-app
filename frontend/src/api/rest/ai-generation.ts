@@ -1,4 +1,5 @@
 import { instance } from ".";
+import { IGenericResponse } from "../interfaces";
 // interfaces
 import {
   IAudioSettingsPayload,
@@ -113,6 +114,32 @@ export const getDownloadableVideo = async (payload: {
       videoTitle,
       scenes,
     });
+
+    const { data } = result;
+
+    response = {
+      ...data,
+    };
+  } catch (error) {
+    response = {
+      ...response,
+      error: `${error}`,
+    };
+  } finally {
+    return response;
+  }
+};
+
+export const monitorVideoStatus = async (
+  jobId: string
+): Promise<IGenericResponse<any>> => {
+  let response: IGenericResponse<any> = {
+    data: "",
+    error: "",
+    success: false,
+  };
+  try {
+    const result = await instance.get(`/user/video/monitor/${jobId}`);
 
     const { data } = result;
 

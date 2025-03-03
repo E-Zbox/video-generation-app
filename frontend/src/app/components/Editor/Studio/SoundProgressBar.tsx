@@ -15,10 +15,6 @@ const SoundProgressBar = () => {
 
   const progressBarRef = useRef<HTMLDivElement>(null);
 
-  const handleLoadedMetadata = (
-    event: React.SyntheticEvent<HTMLAudioElement, Event>
-  ) => {};
-
   const handleClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     const { clientX } = e;
 
@@ -55,11 +51,7 @@ const SoundProgressBar = () => {
 
   return (
     <MainSoundProgressBar onClick={handleClick}>
-      <audio
-        ref={audioRefCallback}
-        src={audioState.tts}
-        onLoadedMetadata={handleLoadedMetadata}
-      ></audio>
+      <audio ref={audioRefCallback} src={audioState.tts}></audio>
       <div ref={progressBarRef}></div>
     </MainSoundProgressBar>
   );
