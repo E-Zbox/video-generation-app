@@ -261,17 +261,27 @@ export const monitorVideoStatus = async (
         throw new Error("Job not found!");
       }
 
-      if (data.error_code && data.error_code == "5001") {
-        if (
-          data.error_message &&
-          data.error_message.error_code == "SYSTEM_EXCEPTION"
-        ) {
+      if (data.error_code) {
+        if (data.error_code == "5001") {
           if (
-            data.error_message.message.includes(
-              "Could not able to download file from"
-            )
+            data.error_message &&
+            data.error_message.error_code == "SYSTEM_EXCEPTION"
           ) {
-            throw new Error("Could not download Brand Logo URL");
+            if (
+              data.error_message.message.includes(
+                "Could not able to download file from"
+              )
+            ) {
+              throw new Error("Could not download Brand Logo URL");
+            }
+          }
+        }
+
+        if (data.error_code == "TEXT_TO_VIDEO_FAILED") {
+          if (data.error_messsage == "socket hang up") {
+            throw new Error(
+              "PictoryAI seems to be processing a lot of request. Try again!"
+            );
           }
         }
       }
