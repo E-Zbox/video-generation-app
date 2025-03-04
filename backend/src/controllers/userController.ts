@@ -130,7 +130,8 @@ export const generateVideoController = async (
         horizontalAlignment: brandLogoHorizontalAlignment,
         url: brandLogoURL,
         verticalAlignment: brandLogoVerticalAlignment,
-      }
+      },
+      speaker
     );
 
     if (!success) {
