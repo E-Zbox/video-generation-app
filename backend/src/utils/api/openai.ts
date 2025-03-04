@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 // interfaces
-import { IGenericResponse } from "../models/interfaces";
+import { IStringResponse } from "../models/interfaces";
 
 const { HF_ACCESS_TOKEN, HF_BASE_URL } = process.env;
 
@@ -9,8 +9,8 @@ const client = new OpenAI({
   baseURL: HF_BASE_URL,
 });
 
-export const expandText = async (text: string) => {
-  let response: IGenericResponse<any> = {
+export const expandText = async (text: string): Promise<IStringResponse> => {
+  let response: IStringResponse = {
     data: "",
     error: "",
     success: false,
@@ -28,7 +28,7 @@ export const expandText = async (text: string) => {
           content: `Expand the text to a story. Don't suggest any further prompt and get straight to the story`,
         },
       ],
-      model: "google/gemma-2-2b-it",
+      model: "o3-mini", //"google/gemma-2-2b-it",
     });
 
     if (!result.choices[0].message.content) {

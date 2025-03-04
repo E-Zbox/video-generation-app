@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Types } from "mongoose";
 // api
-import { expandText } from "@/utils/api/openai";
+import { expandText } from "@/utils/api/gemini";
 import {
   generateDownloadableVideo,
   generateVideo,
