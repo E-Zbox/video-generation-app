@@ -34,6 +34,9 @@ export const pictoryWebhookController = async (
   try {
     const { success, data, job_id } = req.body;
 
+    console.log("webhook got called");
+    console.log({ job_id, success });
+
     if (!success) {
       return res.status(200).json({ success: true });
     }
