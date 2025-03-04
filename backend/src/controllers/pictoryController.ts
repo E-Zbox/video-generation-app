@@ -34,17 +34,39 @@ export const pictoryWebhookController = async (
   try {
     const { success, data, job_id } = req.body;
 
+    const {
+      video_generation_failed,
+      video_generation_success,
+      video_render_failed,
+      video_render_success,
+    } = emitEvents;
+
+    const { create_video_generation_room, create_video_render_room } =
+      roomCreators;
+
     console.log("webhook got called");
     console.log({ job_id, success });
 
     if (!success) {
+      // emit to both rooms
+      io.to(create_video_generation_room(job_id)).emit(
+        video_generation_failed,
+        {
+          data: { jobId: job_id },
+          error: "",
+          success: true,
+        }
+      );
+
+      io.to(create_video_render_room(job_id)).emit(video_render_failed, {
+        data: {
+          jobId: job_id,
+        },
+        error: "",
+        success: true,
+      });
       return res.status(200).json({ success: true });
     }
-
-    const { video_generation_success, video_render_success } = emitEvents;
-
-    const { create_video_generation_room, create_video_render_room } =
-      roomCreators;
 
     if (data.renderParams) {
       io.to(create_video_generation_room(job_id)).emit(
