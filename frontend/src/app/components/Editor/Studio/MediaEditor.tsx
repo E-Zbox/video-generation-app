@@ -49,8 +49,8 @@ const MediaEditor = () => {
 
   const isVideo = src.type;
   const path =
-    trimmedBackgroundVideoState[`${selectedSceneIndex}-${src.url}`]?.video ||
-    src.url;
+    trimmedBackgroundVideoState[`${selectedSceneIndex}-${src.url}`]
+      ?.base64Video || src.url;
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     if (videoRef.current) {

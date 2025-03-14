@@ -40,7 +40,7 @@ export interface IVideoGeneration {
 }
 
 export interface IAudioSettingsPayload {
-  audioId: number;
+  audioId: string;
   audioSrc: string;
   tts: string;
 }
@@ -95,6 +95,10 @@ export interface IScene {
   sub_scenes: ISubScene[];
 }
 
+export interface IJobId {
+  jobId: string;
+}
+
 export interface IVideoRender {
   jobId: string;
   txtFile: string;
@@ -107,6 +111,20 @@ export interface IVideoRender {
   shareVideoURL: string;
   status: "completed" | "in-progress";
 }
+
+export interface ITrimVideo {
+  _id: string;
+  base64: string;
+  mimetype: string;
+  path: string;
+  publicId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IJobIdResponse extends IGenericResponse<IJobId> {}
+
+export interface ITrimVideoResponse extends IGenericResponse<ITrimVideo> {}
 
 export interface IVideoGenerationResponse
   extends IGenericResponse<IVideoGeneration> {}

@@ -18,6 +18,7 @@ import { screens } from "@/app/utils/data";
 import { extractImageFromVideo } from "@/app/utils/ffmpeg";
 import { timeFormatter } from "@/app/utils/transformer";
 import { SceneThumbnail } from "@/app/styles/Editor/Studio/Scene/index.styles";
+import { generateThumbnailsFromVideo } from "@/api/rest/media";
 
 interface IProps {
   index: number;
@@ -100,6 +101,18 @@ const Scene = (props: IProps) => {
     if (isVideo) {
       setLoadingState(true);
       if (ffmpegState && ffmpegState.loaded) {
+        // generateThumbnailsFromVideo(3, 1, path)
+        //   .then((res) => {
+        //     const { data, success } = res;
+
+        //     if (success) {
+        //       updateThumbnailState(path, data[0].src);
+        //     }
+        //   })
+        //   .catch((err) => {
+        //     setLoadingState(false);
+        //     console.log(err);
+        //   });
         extractImageFromVideo(ffmpegState, path, 0)
           .then((res) => {
             const { data, error, success } = res;
@@ -107,6 +120,9 @@ const Scene = (props: IProps) => {
             if (success) {
               // setLocalThumbnailState(data);
               updateThumbnailState(path, data);
+            } else {
+              setLoadingState(false);
+              console.log({ data, error, success });
             }
           })
           .catch((err) => console.log(err));
@@ -162,7 +178,8 @@ const Scene = (props: IProps) => {
           <video
             src={
               trimmedBackgroundVideoState[trimmedBackgroundUrlKey]
-                ? trimmedBackgroundVideoState[trimmedBackgroundUrlKey].video
+                ? trimmedBackgroundVideoState[trimmedBackgroundUrlKey]
+                    .base64Video
                 : path
             }
             onLoadedMetadata={handleLoadedMetaData}

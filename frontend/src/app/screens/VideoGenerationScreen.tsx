@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 // api
 import {
+  IJobIdResponse,
   IStringResponse,
   IVideoGeneration,
   IVideoGenerationResponse,
@@ -131,8 +132,11 @@ const VideoGenerationScreen = () => {
 
   const { join_video_generation_room } = emitEvents;
 
-  const { join_video_generation_room_success, video_generation_success } =
-    onEvents;
+  const {
+    join_video_generation_room_success,
+    video_generation_failed,
+    video_generation_success,
+  } = onEvents;
 
   let disableGenerateButton = false;
 
@@ -307,6 +311,8 @@ const VideoGenerationScreen = () => {
 
     if (!success) {
       updateMessageState({ message: error, success });
+
+      setVideoState((prevState) => ({ ...prevState, loading: false }));
       return;
     }
 
@@ -380,7 +386,17 @@ const VideoGenerationScreen = () => {
   }, [selectedTabMenuState]);
 
   useEffect(() => {
-    // socketState.on("connect", () => {
+    const onVideoGenerationFailedListener = ({ data }: IJobIdResponse) => {
+      const { jobId } = data;
+
+      updateMessageState({
+        message: "Video processing failed. Try again!",
+        success: false,
+      });
+    };
+
+    socketState.on(video_generation_failed, onVideoGenerationFailedListener);
+
     const onJoinVideoGenerationRoomSuccessListener = (
       payload: IStringResponse
     ) => {
@@ -455,6 +471,8 @@ const VideoGenerationScreen = () => {
     // });
 
     return () => {
+      socketState.off(video_generation_failed, onVideoGenerationFailedListener);
+
       socketState.off(
         join_video_generation_room_success,
         onJoinVideoGenerationRoomSuccessListener

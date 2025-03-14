@@ -22,7 +22,7 @@ import { CustomImage } from "@/app/styles/shared/Image.styles";
 // utils
 import { screens } from "@/app/utils/data";
 import { download } from "@/app/utils/transformer";
-import { IVideoRenderResponse } from "@/api/interfaces/video";
+import { IJobIdResponse, IVideoRenderResponse } from "@/api/interfaces/video";
 import { monitorVideoStatus } from "@/api/rest/ai-generation";
 
 interface IProps {
@@ -76,8 +76,10 @@ const AIGeneratedVideo = (props: IProps) => {
     vttFile,
   } = generatedVideoState[jobId];
 
+  const generatedVideoJobIds = Object.getOwnPropertyNames(generatedVideoState);
+
   // socket
-  const { video_render_success } = onEvents;
+  const { video_render_failed, video_render_success } = onEvents;
 
   const handleStatusClick = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -95,7 +97,10 @@ const AIGeneratedVideo = (props: IProps) => {
 
       if (error.includes("Something went wrong")) {
         deleteGeneratedVideoState(jobId);
-        selectTabMenuState(0);
+
+        if (generatedVideoJobIds.length == 1) {
+          selectTabMenuState(0);
+        }
       }
       return;
     }
@@ -115,6 +120,23 @@ const AIGeneratedVideo = (props: IProps) => {
   };
 
   useEffect(() => {
+    const onVideoRenderFailedListener = ({ data }: IJobIdResponse) => {
+      if (jobId === data.jobId) {
+        updateMessageState({
+          message: "Video processing failed. Try again!",
+          success: false,
+        });
+        deleteGeneratedVideoState(jobId);
+
+        if (generatedVideoJobIds.length == 1) {
+          selectTabMenuState(0);
+        }
+        return;
+      }
+    };
+
+    socketState.on(video_render_failed, onVideoRenderFailedListener);
+
     const onVideoRenderSuccessListener = ({ data }: IVideoRenderResponse) => {
       console.log({ data });
       if (jobId === data.jobId) {
@@ -128,6 +150,8 @@ const AIGeneratedVideo = (props: IProps) => {
     socketState.on(video_render_success, onVideoRenderSuccessListener);
 
     return () => {
+      socketState.off(video_render_failed, onVideoRenderFailedListener);
+
       socketState.off(video_render_success, onVideoRenderSuccessListener);
     };
   }, []);
@@ -151,7 +175,6 @@ const AIGeneratedVideo = (props: IProps) => {
       <NonVideoThumbnail>
         {processing ? (
           <>
-            <h4>{jobId}</h4>
             <ProcessingText>Processing...</ProcessingText>
             {loadingState ? (
               <CustomImage src={loaderThreeIcon.src} $size={"32px"} />
@@ -161,7 +184,6 @@ const AIGeneratedVideo = (props: IProps) => {
           </>
         ) : (
           <>
-            <h4>{jobId}</h4>
             <VideoNameText>{videoName}</VideoNameText>
             <OtherDownloads>
               <DivContainer $flexDirection="row" $width="fit-content">

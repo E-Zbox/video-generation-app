@@ -392,7 +392,9 @@ export const useEditorStore = create<IEditorStore>()((set) => ({
           [`${voiceoverTrack.id}`]: {
             ...voiceoverTrack,
             playing: false,
-            selected: voiceoverTrack.name === "Ivy (child)",
+            selected: (function () {
+              return voiceoverTrack.name === "Ivy (child)";
+            })(),
             // selected: false,
           },
         };
@@ -440,10 +442,11 @@ export const useEditorStore = create<IEditorStore>()((set) => ({
 }));
 
 interface ITrimmedBackgroundVideo {
+  base64Video: string;
   leftOffset: number; // (in pixels) relative to parent's scrollWidth
   rightOffset: number; // (in pixels) relative to parent's scrollWidth
   // topOffset: number;
-  video: string;
+  videoURL: string;
 }
 
 interface ITrimmedBackgroundRecord {
@@ -494,7 +497,7 @@ interface IStoryboardEditorStore extends IStoryboardEditorState {
   setCachedSSMLTagState: (newState: null | ICachedSSMLTag) => void;
   setEditTagToolActivatedState: (newState: boolean) => void;
   setSelectedTextLineTagState: (newState: null | ISelectedTextLineTag) => void;
-  deleteSceneSubSceneTextLineState: (
+  deleteSceneSubSceneTextLineTagState: (
     sceneIndex: number,
     subSceneIndex: number,
     textLineIndex: number
@@ -595,7 +598,7 @@ export const useStoryboardEditorStore = create<IStoryboardEditorStore>()(
     selectedTextLineTagState: null,
     setSelectedTextLineTagState: (newState: null | ISelectedTextLineTag) =>
       set({ selectedTextLineTagState: newState }),
-    deleteSceneSubSceneTextLineState: (
+    deleteSceneSubSceneTextLineTagState: (
       sceneIndex: number,
       subSceneIndex: number,
       textLineIndex: number

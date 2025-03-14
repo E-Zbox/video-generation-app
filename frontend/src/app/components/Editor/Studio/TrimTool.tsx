@@ -146,10 +146,21 @@ const TrimTool = () => {
         return;
       }
 
+      const {
+        _id,
+        base64: base64Video,
+        createdAt,
+        mimetype,
+        path: videoURL,
+        publicId,
+        updatedAt,
+      } = data;
+
       updateTrimmedBackgroundVideoState(path, {
+        base64Video,
         leftOffset: leftOffsetInPixelState,
         rightOffset: rightOffsetInPixelState,
-        video: data,
+        videoURL,
       });
 
       console.log(trimmedBackgroundVideoState);

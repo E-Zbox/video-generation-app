@@ -9,8 +9,8 @@ export interface IMedia {
   mimetype: string;
   path: string;
   publicId: string;
-  createdAt: "";
-  updatedAt: "";
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IMediaResponse extends IGenericResponse<IMedia> {}

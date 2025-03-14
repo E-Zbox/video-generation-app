@@ -62,6 +62,7 @@ import { screens } from "@/app/utils/data";
 import { timeFormatter } from "@/app/utils/transformer";
 import { StatusButton } from "@/app/styles/Editor/MediaTray/AIGeneratedVideo.styles";
 import {
+  IJobIdResponse,
   IScene,
   IStringResponse,
   IVideoGenerationResponse,
@@ -128,6 +129,7 @@ const Studio = () => {
     setSelectedTextLineTagState,
     trimActivatedState,
     setTrimActivatedState,
+    trimmedBackgroundVideoState,
     updateSceneBackgroundUrlState,
     setVoiceoverAudioRefState,
   } = useStoryboardEditorStore();
@@ -165,6 +167,7 @@ const Studio = () => {
   const {
     join_video_generation_room_success,
     join_video_render_room_success,
+    video_generation_failed,
     video_generation_success,
   } = onEvents;
 
@@ -326,6 +329,11 @@ const Studio = () => {
 
       setLoadingState(true);
 
+      const videoName = outputState.name.substring(
+        0,
+        outputState.name.lastIndexOf(".")
+      );
+
       console.log({
         generateVideoPayload: {
           brandLogoHorizontalAlignment: "right",
@@ -344,7 +352,7 @@ const Studio = () => {
             })
             .join(),
           videoDescription: outputState.description,
-          videoName: outputState.name,
+          videoName,
         },
       });
 
@@ -355,7 +363,7 @@ const Studio = () => {
         brandLogoURL: formState.input_logo,
         brandLogoVerticalAlignment: "top",
         minimumDuration: minimumVideoDurationState,
-        speaker: voiceoverTrackState[language][id].name,
+        speaker: voiceoverTrackState[language][id]?.name || undefined,
         text: sceneState
           .map((scene): string => {
             return scene.sub_scenes
@@ -401,6 +409,12 @@ const Studio = () => {
           ...scene,
           background: {
             ...scene.background,
+            src: scene.background.src.map((src, index) => ({
+              ...src,
+              url:
+                trimmedBackgroundVideoState[`${selectedSceneIndex}-${src.url}`]
+                  ?.videoURL || src.url,
+            })),
             // time: time,
           },
           sub_scenes: scene.sub_scenes.map((sub_scene) => ({
@@ -420,7 +434,7 @@ const Studio = () => {
       console.log("Editor > index.tsx > getDownloadableVideo");
       console.log({
         audioSettings: {
-          audioId: Number(audioId),
+          audioId,
           audioSrc,
           tts: tts || "",
         },
@@ -440,7 +454,7 @@ const Studio = () => {
         success,
       } = await getDownloadableVideo({
         audioSettings: {
-          audioId: Number(audioId),
+          audioId,
           audioSrc,
           tts: tts || "",
         },
@@ -489,6 +503,8 @@ const Studio = () => {
 
     if (!success) {
       updateMessageState({ message: error, success });
+
+      setGeneratingNewScenes(false);
       return;
     }
 
@@ -521,6 +537,8 @@ const Studio = () => {
   };
 
   useEffect(() => {
+    console.log("storyboard state");
+    console.log({ audioState, outputState, sceneState });
     const errorEventListener = (e: Event) => {
       updateMessageState({
         message: "Could not load brand logo",
@@ -565,6 +583,19 @@ const Studio = () => {
       onJoinVideoGenerationRoomSuccessListener
     );
 
+    const onVideoGenerationFailedListener = ({ data }: IJobIdResponse) => {
+      const { jobId } = data;
+
+      updateMessageState({
+        message: "Video processing failed. Try again!",
+        success: false,
+      });
+
+      setGeneratingNewScenes(false);
+    };
+
+    socketState.on(video_generation_failed, onVideoGenerationFailedListener);
+
     const onVideoGenerationSuccessListener = (
       payload: IVideoGenerationResponse
     ) => {
@@ -574,6 +605,9 @@ const Studio = () => {
         updateMessageState({ message: error, success: false });
         return;
       }
+
+      console.log(video_generation_success);
+      console.log(data);
 
       const { audio, output, scenes } = data.renderParams;
 
@@ -627,6 +661,8 @@ const Studio = () => {
         join_video_generation_room_success,
         onJoinVideoGenerationRoomSuccessListener
       );
+
+      socketState.off(video_generation_failed, onVideoGenerationFailedListener);
 
       socketState.off(
         video_generation_success,
@@ -806,6 +842,7 @@ const Studio = () => {
                   $height="100%"
                   $width="100%"
                   $position="fixed"
+                  $miscellanous="z-index: 1;"
                   onClick={() => setShowBrandLogoInputState(false)}
                 >
                   <LogoInput

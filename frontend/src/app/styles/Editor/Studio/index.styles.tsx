@@ -238,7 +238,19 @@ export const MainVoiceOver = styled.main`
   border-radius: 5px;
   box-shadow: 0px 1px 4px #ddd2;
   transform: translate(0px, -50%);
-  background-color: ${blue03}28;
+  background-color: #000;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    height: 100%;
+    width: 100%;
+    left: 0px;
+    right:0px;
+    position: absolute;
+    z-index: -1;
+    background-color: ${blue03}28;
+  }
   `}
 `;
 

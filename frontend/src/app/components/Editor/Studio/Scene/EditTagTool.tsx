@@ -31,7 +31,6 @@ const EditTagTool = () => {
     cachedSSMLTagState,
     sceneState,
     selectedTextLineTagState,
-    deleteSceneSubSceneTextLineState,
     updateSceneSubSceneTextLineState,
   } = useStoryboardEditorStore();
 
@@ -114,8 +113,28 @@ const EditTagTool = () => {
     );
   };
 
-  const handleDelete = (e: React.MouseEvent<HTMLImageElement, MouseEvent>) => {
-    deleteSceneSubSceneTextLineState(sceneIndex, subSceneIndex, textLineIndex);
+  const handleDeleteTag = (
+    e: React.MouseEvent<HTMLImageElement, MouseEvent>
+  ) => {
+    const { tags } = parseSSML(
+      sceneState[sceneIndex].sub_scenes[subSceneIndex].text_lines[textLineIndex]
+        .text
+    );
+
+    const updatedTags = tags.filter((tag, index) => {
+      if (index !== tagTextIndex) {
+        return tag;
+      }
+    });
+
+    const newLineText = constructSSML(updatedTags);
+
+    updateSceneSubSceneTextLineState(
+      sceneIndex,
+      subSceneIndex,
+      textLineIndex,
+      newLineText
+    );
   };
 
   useEffect(() => {
@@ -148,7 +167,7 @@ const EditTagTool = () => {
           src={trashIcon.src}
           $hover={true}
           $size={"40px"}
-          onClick={handleDelete}
+          onClick={handleDeleteTag}
         />
       </EditTagButtonContainer>
     </MainEditTagTool>

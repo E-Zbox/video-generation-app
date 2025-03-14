@@ -2,7 +2,11 @@ import { instance } from ".";
 import { INumberResponse } from "../interfaces";
 // interfaces>
 import { ICreateMediaPayload, IMediaResponse } from "../interfaces/media";
-import { IStringResponse, IThumbnailsResponse } from "../interfaces/video";
+import {
+  IStringResponse,
+  IThumbnailsResponse,
+  ITrimVideoResponse,
+} from "../interfaces/video";
 
 export const uploadMedia = async (
   payload: ICreateMediaPayload
@@ -129,9 +133,17 @@ export const trimVideo = async (
   offset: number,
   startTime: number,
   videoUrl: string
-): Promise<IStringResponse> => {
-  let response: IStringResponse = {
-    data: "",
+): Promise<ITrimVideoResponse> => {
+  let response: ITrimVideoResponse = {
+    data: {
+      _id: "",
+      base64: "",
+      createdAt: "",
+      mimetype: "",
+      path: "",
+      publicId: "",
+      updatedAt: "",
+    },
     error: "",
     success: false,
   };

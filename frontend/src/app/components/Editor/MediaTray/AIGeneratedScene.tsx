@@ -70,7 +70,10 @@ const AIGeneratedScene = (props: IProps) => {
   }, [thumbnailState, metadataState]);
 
   useEffect(() => {
-    if (videoMetadataState[path]) {
+    if (
+      videoMetadataState[path] &&
+      videoMetadataState[path].duration !== metadataState.duration
+    ) {
       setMetadataState(videoMetadataState[path]);
     }
   }, [videoMetadataState]);
