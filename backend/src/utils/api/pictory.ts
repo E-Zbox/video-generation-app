@@ -357,6 +357,14 @@ export const generateDownloadableVideo = async (
   };
 
   try {
+    console.log(
+      JSON.stringify({
+        audio: audioSettings,
+        output: outputSettings,
+        scenes: scenes,
+        webhook: `${LIVE_API_BASE_URL}/pictory/webhook`,
+      })
+    );
     const result = await fetch(`${PICTORY_BASE_URL}/video/render`, {
       headers: {
         Accept: "application/json",
