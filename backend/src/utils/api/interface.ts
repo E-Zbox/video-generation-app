@@ -30,7 +30,7 @@ export interface IBrandLogoPayload {
 
 export interface IAudioSettings {
   video_volume: number;
-  audio_id: number;
+  audio_id: string;
   audio_library: string;
   src: string;
   track_volume: number;
