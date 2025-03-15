@@ -6,4 +6,10 @@ node_modules/
 
 task-one*
 
+task-two*
+
 */*/*/*/Test*
+
+output/
+
+backend/src/controllers/*-video-render.json
