@@ -130,9 +130,6 @@ export const generatePictoryToken =
           throw newAccessToken.error;
         }
 
-        console.log("newAccessToken");
-        console.log(newAccessToken);
-
         const { accessToken, expiresIn } = newAccessToken.data;
 
         response = await createPictoryToken({
